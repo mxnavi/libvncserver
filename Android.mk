@@ -7,7 +7,10 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/include \
                     $(LOCAL_PATH)/libvncserver \
                     $(LOCAL_PATH) \
                     $(LOCAL_PATH)/common \
-                    external/jpeg
+                    external/jpeg \
+                    external/zlib \
+                    external/libpng \
+                    external/openssl/include
 
 LOCAL_SRC_FILES := libvncserver/auth.c \
                    libvncserver/cargs.c \
@@ -43,10 +46,13 @@ LOCAL_SRC_FILES := libvncserver/auth.c \
                    common/vncauth.c \
                    test/bmp.c
 
-LOCAL_STATIC_LIBRARIES := libz libpng libjpeg libssl
+LOCAL_STATIC_LIBRARIES := libz libpng libjpeg_static
+LOCAL_SHARED_LIBRARIES := libssl
 LOCAL_CFLAGS := \
     -D__ANDROID__ -DHAVE_LIBSSL -DWITH_WEBSOCKETS \
-    -Wall -Werror \
+    -Wall
+
+# -Werror \
     -Wno-missing-field-initializers \
     -Wno-sign-compare \
     -Wno-tautological-compare \

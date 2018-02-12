@@ -1687,7 +1687,8 @@ rfbBool rfbProcessFileTransfer(rfbClientPtr cl, uint8_t contentType, uint8_t con
             else
             {
               /* Add the File Time Stamp to the filename */
-              strftime(timespec, sizeof(timespec), "%m/%d/%Y %H:%M",gmtime(&statbuf.st_ctime));
+              time_t tmp = (time_t)statbuf.st_ctime;
+              strftime(timespec, sizeof(timespec), "%m/%d/%Y %H:%M",gmtime(&tmp));
               buffer=realloc(buffer, length + strlen(timespec) + 2); /* comma, and Null term */
               if (buffer==NULL) {
                   rfbLog("rfbProcessFileTransfer() rfbFileTransferRequest: Failed to malloc %d bytes\n", length + strlen(timespec) + 2);
