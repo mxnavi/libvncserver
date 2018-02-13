@@ -2041,77 +2041,79 @@ fail:
     return FALSE;
 }
 
-
-static void rfbProcessMLExt_ByeBye(rfbClientPtr cl,
-        const rfbMLExtMsg *msg, const char *payload)
+static void rfbProcessMLExt_ByeBye(rfbClientPtr cl, const rfbMLExtMsg *msg,
+                                   const char *payload)
 {
-
+    rfbLog("%s() @line %d\n", __FUNCTION__, __LINE__);
+    rfbSendMLExtMessage(cl, rfbMLExt_ByeBye, 0, NULL);
+    rfbCloseClient(cl);
 }
-static void rfbProcessMLExt_ClientDispCfg(rfbClientPtr cl,
-        const rfbMLExtMsg *msg, const char *payload)
-{
 
+static void rfbProcessMLExt_ClientDispCfg(rfbClientPtr cl,
+                                          const rfbMLExtMsg *msg,
+                                          const char *payload)
+{
+    rfbLog("%s() @line %d\n", __FUNCTION__, __LINE__);
 }
 
 static void rfbProcessMLExt_ClientEvtCfg(rfbClientPtr cl,
         const rfbMLExtMsg *msg, const char *payload)
 {
-
+    rfbLog("%s() @line %d\n", __FUNCTION__, __LINE__);
 }
 
 static void rfbProcessMLExt_EvtMappingiReq(rfbClientPtr cl,
         const rfbMLExtMsg *msg, const char *payload)
 {
-
+    rfbLog("%s() @line %d\n", __FUNCTION__, __LINE__);
 }
 
-static void rfbProcessMLExt_KeyEvtListingRe(rfbClientPtr cl,
-                                            const rfbMLExtMsg *msg,
-                                            const char *payload)
+static void rfbProcessMLExt_KeyEvtListingReq(rfbClientPtr cl,
+        const rfbMLExtMsg *msg, const char *payload)
 {
-
+    rfbLog("%s() @line %d\n", __FUNCTION__, __LINE__);
 }
 
 static void rfbProcessMLExt_VKBTriggerReq(rfbClientPtr cl,
         const rfbMLExtMsg *msg, const char *payload)
 {
-
+    rfbLog("%s() @line %d\n", __FUNCTION__, __LINE__);
 }
 
 static void rfbProcessMLExt_DeviceStatusReq(rfbClientPtr cl,
         const rfbMLExtMsg *msg, const char *payload)
 {
-
+    rfbLog("%s() @line %d\n", __FUNCTION__, __LINE__);
 }
 
 static void rfbProcessMLExt_ContentAttestationReq(rfbClientPtr cl,
         const rfbMLExtMsg *msg, const char *payload)
 {
-
+    rfbLog("%s() @line %d\n", __FUNCTION__, __LINE__);
 }
 
 static void rfbProcessMLExt_FBBlockingNotify(rfbClientPtr cl,
         const rfbMLExtMsg *msg, const char *payload)
 {
-
+    rfbLog("%s() @line %d\n", __FUNCTION__, __LINE__);
 }
 
 static void rfbProcessMLExt_AudioBlockingNotify(rfbClientPtr cl,
         const rfbMLExtMsg *msg, const char *payload)
 {
-
+    rfbLog("%s() @line %d\n", __FUNCTION__, __LINE__);
 }
 
 static void rfbProcessMLExt_TouchEvt(rfbClientPtr cl,
         const rfbMLExtMsg *msg, const char *payload)
 {
-
+    rfbLog("%s() @line %d\n", __FUNCTION__, __LINE__);
 }
 
 static void rfbProcessMLExt_FBAlternativeTextReq(rfbClientPtr cl,
         const rfbMLExtMsg *msg, const char *payload)
 {
-
+    rfbLog("%s() @line %d\n", __FUNCTION__, __LINE__);
 }
 
 static void rfbProcessMLExt(rfbClientPtr cl, rfbMLExtMsg *msg)
@@ -2129,36 +2131,48 @@ static void rfbProcessMLExt(rfbClientPtr cl, rfbMLExtMsg *msg)
     switch (msg->ext_type) {
     case rfbMLExt_ByeBye:
         /* send rfbMLExt_ByeBye: */
+        rfbProcessMLExt_ByeBye(cl, msg, buffer);
         break;
     case rfbMLExt_ClientDispCfg:
         /* send rfbMLExt_ServerDispCfg: */
+        rfbProcessMLExt_ClientDispCfg(cl, msg, buffer);
         break;
     case rfbMLExt_ClientEvtCfg:
         /* send rfbMLExt_ServerEvtCfg: */
+        rfbProcessMLExt_ClientEvtCfg(cl, msg, buffer);
         break;
     case rfbMLExt_EvtMappingiReq:
         /* send rfbMLExt_EvtMapping: */
+        rfbProcessMLExt_EvtMappingiReq(cl, msg, buffer);
         break;
     case rfbMLExt_KeyEvtListingReq:
         /* send rfbMLExt_KeyEvtListing: */
+        rfbProcessMLExt_KeyEvtListingReq(cl, msg, buffer);
         break;
     case rfbMLExt_VKBTriggerReq:
         /* send rfbMLExt_VKBTrigger: */
+        rfbProcessMLExt_VKBTriggerReq(cl, msg, buffer);
         break;
     case rfbMLExt_DeviceStatusReq:
         /* send rfbMLExt_DeviceStatus: */
+        rfbProcessMLExt_DeviceStatusReq(cl, msg, buffer);
         break;
     case rfbMLExt_ContentAttestationReq:
         /* send rfbMLExt_ContentAttestationRes: */
+        rfbProcessMLExt_ContentAttestationReq(cl, msg, buffer);
         break;
     case rfbMLExt_FBBlockingNotify:
+        rfbProcessMLExt_FBBlockingNotify(cl, msg, buffer);
         break;
     case rfbMLExt_AudioBlockingNotify:
+        rfbProcessMLExt_AudioBlockingNotify(cl, msg, buffer);
         break;
     case rfbMLExt_TouchEvt:
+        rfbProcessMLExt_TouchEvt(cl, msg, buffer);
         break;
     case rfbMLExt_FBAlternativeTextReq:
         /* send rfbMLExt_FBAlternativeText: */
+        rfbProcessMLExt_FBAlternativeTextReq(cl, msg, buffer);
         break;
     default:
         rfbLog("rfbProcessMLExt: unknown extension type: %d\n", msg->ext_type);
