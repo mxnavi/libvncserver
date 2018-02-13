@@ -1977,6 +1977,160 @@ fail:
     return FALSE;
 }
 
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
+static char *rfbProcessMLExtReadBuffer(rfbClientPtr cl, uint16_t length)
+{
+    char *buffer = NULL;
+    if (length != 0) {
+        buffer = malloc(length);
+        if (buffer != NULL) {
+            int n;
+            if ((n = rfbReadExact(cl, (char *)buffer, length)) <= 0) {
+                if (n != 0) {
+                    rfbLogPerror("rfbProcessMLExtReadBuffer: read");
+                }
+                goto fail;
+            }
+        } else {
+            goto fail;
+        }
+    }
+    return buffer;
+
+fail:
+    rfbCloseClient(cl);
+    if (buffer != NULL) free(buffer);
+    return NULL;
+}
+
+static void rfbProcessMLExt_ByeBye(rfbClientPtr cl,
+        const rfbMLExtMsg *msg, const char *payload)
+{
+
+}
+static void rfbProcessMLExt_ClientDispCfg(rfbClientPtr cl,
+        const rfbMLExtMsg *msg, const char *payload)
+{
+
+}
+
+static void rfbProcessMLExt_ClientEvtCfg(rfbClientPtr cl,
+        const rfbMLExtMsg *msg, const char *payload)
+{
+
+}
+
+static void rfbProcessMLExt_EvtMappingiReq(rfbClientPtr cl,
+        const rfbMLExtMsg *msg, const char *payload)
+{
+
+}
+
+static void rfbProcessMLExt_KeyEvtListingRe(rfbClientPtr cl,
+                                            const rfbMLExtMsg *msg,
+                                            const char *payload)
+{
+
+}
+q
+static void rfbProcessMLExt_VKBTriggerReq(rfbClientPtr cl,
+        const rfbMLExtMsg *msg, const char *payload)
+{
+
+}
+
+static void rfbProcessMLExt_DeviceStatusReq(rfbClientPtr cl,
+        const rfbMLExtMsg *msg, const char *payload)
+{
+
+}
+
+static void rfbProcessMLExt_ContentAttestationReq(rfbClientPtr cl,
+        const rfbMLExtMsg *msg, const char *payload)
+{
+
+}
+
+static void rfbProcessMLExt_FBBlockingNotify(rfbClientPtr cl,
+        const rfbMLExtMsg *msg, const char *payload)
+{
+
+}
+
+static void rfbProcessMLExt_AudioBlockingNotify(rfbClientPtr cl,
+        const rfbMLExtMsg *msg, const char *payload)
+{
+
+}
+
+static void rfbProcessMLExt_TouchEvt(rfbClientPtr cl,
+        const rfbMLExtMsg *msg, const char *payload)
+{
+
+}
+
+static void rfbProcessMLExt_FBAlternativeTextReq(rfbClientPtr cl,
+        const rfbMLExtMsg *msg, const char *payload)
+{
+
+}
+
+static void rfbProcessMLExt(rfbClientPtr cl, rfbMLExtMsg *msg)
+{
+    char *buffer;
+
+    assert(msg != NULL && msg->type == rfbMLExt);
+    if (msg->length != 0) {
+        buffer = rfbProcessMLExtReadBuffer(cl, msg->length);
+        assert(buffer != NULL);
+    } else {
+        buffer = NULL;
+    }
+
+    switch (msg->ext_type) {
+    case rfbMLExt_ByeBye:
+        /* send rfbMLExt_ByeBye: */
+        break;
+    case rfbMLExt_ClientDispCfg:
+        /* send rfbMLExt_ServerDispCfg: */
+        break;
+    case rfbMLExt_ClientEvtCfg:
+        /* send rfbMLExt_ServerEvtCfg: */
+        break;
+    case rfbMLExt_EvtMappingiReq:
+        /* send rfbMLExt_EvtMapping: */
+        break;
+    case rfbMLExt_KeyEvtListingReq:
+        /* send rfbMLExt_KeyEvtListing: */
+        break;
+    case rfbMLExt_VKBTriggerReq:
+        /* send rfbMLExt_VKBTrigger: */
+        break;
+    case rfbMLExt_DeviceStatusReq:
+        /* send rfbMLExt_DeviceStatus: */
+        break;
+    case rfbMLExt_ContentAttestationReq:
+        /* send rfbMLExt_ContentAttestationRes: */
+        break;
+    case rfbMLExt_FBBlockingNotify:
+        break;
+    case rfbMLExt_AudioBlockingNotify:
+        break;
+    case rfbMLExt_TouchEvt:
+        break;
+    case rfbMLExt_FBAlternativeTextReq:
+        /* send rfbMLExt_FBAlternativeText: */
+        break;
+    default:
+        rfbLog("rfbProcessMLExt: unknown extension type: %d", msg->ext_type);
+        break
+    }
+    if (buffer != NULL) {
+        free(buffer);
+    }
+}
+#endif
+
 /*
  * rfbProcessClientNormalMessage is called when the client has sent a normal
  * protocol message.
@@ -2662,6 +2816,23 @@ rfbProcessClientNormalMessage(rfbClientPtr cl)
 	  rfbSendXvp(cl, 1, rfbXvp_Fail);
       }
       return;
+
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
+    case rfbMLExt: {
+        rfbMLExtMsg ml_msg;
+        assert(sizeof(ml_msg) == sz_rfbMLExtMsg);
+
+        if ((n = rfbReadExact(cl, (char *)&ml_msg, sz_rfbMLExtMsg)) <= 0) {
+            if (n != 0)
+                rfbLogPerror("rfbProcessClientNormalMessage: read");
+            rfbCloseClient(cl);
+            return;
+        }
+        ml_msg.length       = Swap32IfLE(msg.length);
+        rfbProcessMLExt(cl, &ml_msg);
+        return;
+    }
+#endif
 
     default:
 	{
