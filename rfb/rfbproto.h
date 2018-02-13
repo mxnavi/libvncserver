@@ -1341,7 +1341,7 @@ typedef struct {
     uint16_t text_x; /* Text input area – X-Position */
     uint16_t text_y; /* Text input area – Y-Position */
     uint16_t text_w; /* Text input area – Width */
-    uint16_t text_w; /* Text input area – Height */
+    uint16_t text_h; /* Text input area – Height */
 } rfbMLExt_VKBTrigger_t;
 
 /* Payload length: 4 */
@@ -1408,7 +1408,7 @@ typedef struct {
     server does not have to remember previous session
     keys and mapping of these keys to different client de-
     vices.*/
-} rfbMLExt_DeviceStatusReq_t;
+} rfbMLExt_ContentAttestationReq_t;
 
 /* Payload length: 14 */
 typedef struct {

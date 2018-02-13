@@ -2009,14 +2009,14 @@ rfbBool rfbSendMLExtMessage(rfbClientPtr cl, uint8_t ext_type, uint16_t length,
     rfbMLExtMsg msg;
 
     msg.type = rfbMLExt;
-    msg.ext_type = contentType;
-    msg.length       = Swap32IfLE(length);
+    msg.ext_type = ext_type;
+    msg.length = Swap16IfLE(length);
 
     rfbLog("rfbSendMLExtMessage(%02d, length: %d %p)\n",
             ext_type, length, buffer);
 
     LOCK(cl->sendMutex);
-    if (rfbWriteExact(cl, (char *)&ft, sz_rfbFileTransferMsg) < 0) {
+    if (rfbWriteExact(cl, (char *)&msg, sz_rfbMLExtMsg) < 0) {
         rfbLogPerror("rfbSendMLExtMessage: write");
         goto fail;
     }
@@ -2071,7 +2071,7 @@ static void rfbProcessMLExt_KeyEvtListingRe(rfbClientPtr cl,
 {
 
 }
-q
+
 static void rfbProcessMLExt_VKBTriggerReq(rfbClientPtr cl,
         const rfbMLExtMsg *msg, const char *payload)
 {
@@ -2161,8 +2161,8 @@ static void rfbProcessMLExt(rfbClientPtr cl, rfbMLExtMsg *msg)
         /* send rfbMLExt_FBAlternativeText: */
         break;
     default:
-        rfbLog("rfbProcessMLExt: unknown extension type: %d", msg->ext_type);
-        break
+        rfbLog("rfbProcessMLExt: unknown extension type: %d\n", msg->ext_type);
+        break;
     }
     if (buffer != NULL) {
         free(buffer);
@@ -2862,12 +2862,13 @@ rfbProcessClientNormalMessage(rfbClientPtr cl)
         assert(sizeof(ml_msg) == sz_rfbMLExtMsg);
 
         if ((n = rfbReadExact(cl, (char *)&ml_msg, sz_rfbMLExtMsg)) <= 0) {
-            if (n != 0)
+            if (n != 0) {
                 rfbLogPerror("rfbProcessClientNormalMessage: read");
+            }
             rfbCloseClient(cl);
             return;
         }
-        ml_msg.length       = Swap32IfLE(msg.length);
+        ml_msg.length = Swap16IfLE(ml_msg.length);
         rfbProcessMLExt(cl, &ml_msg);
         return;
     }
