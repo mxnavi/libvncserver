@@ -2003,6 +2003,45 @@ fail:
     return NULL;
 }
 
+rfbBool rfbSendMLExtMessage(rfbClientPtr cl, uint8_t ext_type, uint16_t length,
+                            const char *buffer)
+{
+    rfbMLExtMsg msg;
+
+    msg.type = rfbMLExt;
+    msg.ext_type = contentType;
+    msg.length       = Swap32IfLE(length);
+
+    rfbLog("rfbSendMLExtMessage(%02d, length: %d %p)\n",
+            ext_type, length, buffer);
+
+    LOCK(cl->sendMutex);
+    if (rfbWriteExact(cl, (char *)&ft, sz_rfbFileTransferMsg) < 0) {
+        rfbLogPerror("rfbSendMLExtMessage: write");
+        goto fail;
+    }
+
+    if (length > 0) {
+        assert(buffer != NULL);
+        if (rfbWriteExact(cl, buffer, length) < 0) {
+            rfbLogPerror("rfbSendMLExtMessage: write");
+            goto fail;
+        }
+    }
+    UNLOCK(cl->sendMutex);
+
+    rfbStatRecordMessageSent(cl,
+            rfbMLExt, sz_rfbMLExtMsg + length, sz_rfbMLExtMsg + length);
+
+    return TRUE;
+
+fail:
+    rfbCloseClient(cl);
+    UNLOCK(cl->sendMutex);
+    return FALSE;
+}
+
+
 static void rfbProcessMLExt_ByeBye(rfbClientPtr cl,
         const rfbMLExtMsg *msg, const char *payload)
 {
