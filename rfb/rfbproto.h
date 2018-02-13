@@ -399,6 +399,11 @@ typedef struct {
 #define rfbResizeFrameBuffer 4
 #define rfbPalmVNCReSizeFrameBuffer 0xF
 
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
+/* MirrorLink message type used by both server and client */
+#define rfbMLExt 128
+#endif
+
 /* client -> server */
 
 #define rfbSetPixelFormat 0
@@ -1189,7 +1194,79 @@ typedef struct {
 #define sz_rfbPalmVNCReSizeFrameBufferMsg (12)
 
 
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
+/*-----------------------------------------------------------------------------
+ * vnc mirror link extension messages
+ * |--------|--------|--------|--------
+ * | bytes  | Type   |  Value | Description
+ * |--------|--------|--------|--------
+ * | 1      | U8     |  128   | MirrorLink Message-type
+ * |--------|--------|--------|--------
+ * | 1      | U8     |        | Extension-type
+ * |--------|--------|--------|--------
+ * | 2      | U16    |        | Payload length
+ * |--------|--------|--------|--------
+ * | N      |U8 array|        | Message specific payload data
+ * |--------|--------|--------|--------
+ */
 
+typedef struct {
+    uint8_t type; /* always rfbMLExt (128) */
+    uint8_t ext_type;
+    uint16_t length;
+    /* followed by uint8[length] which is Message specific payload data */
+} rfbMLExtMsg;
+
+#define sz_rfbMLExtMsg 4
+
+/**
+ * |----------------|----------------|--------|----------------|--------------
+ * | Extension-Type | Message Name   | Origin | Server Support | Client Support
+ * |----------------|----------------|--------|----------------|--------------
+ * | 0              | ByeBye         | Server | MUST           | MUST
+ * | 0              | ByeBye         | Client | MUST           | MUST
+ * | 1              | Server Display Configuration      | Server | MUST MUST
+ * | 2              | Client Display Configuration      | Client | MUST MUST
+ * | 3              | Server Event Configuration        | Server | MUST MUST
+ * | 4              | Client Event Configuration        | Client | MUST MUST
+ * | 5              | Event  Mapping                    | Server MUST  MAY
+ * | 6              | Event Mapping Request             | Client MUST MAY
+ * | 7              | Key Event Listing                 | Server SHOULD MAY
+ * | 8              | Key Event Listing Request         | Client SHOULD MAY
+ * | 9              | Virtual Keyboard Trigger          | Server SHOULD MAY
+ * | 10             | Virtual Keyboard Trigger Request  | Client SHOULD MAY
+ * | 11             | Device Status                     | Server MUST MUST
+ * | 12             | Device Status Request             | Client MUST MUST
+ * | 13             | Content Attestation Response      | Server SHOULD SHOULD
+ * | 14             | Content Attestation Request       | Client SHOULD SHOULD
+ * | 16             | Framebuffer Blocking Notification | Client MUST MUST
+ * | 18             | Audio Blocking Notification       | Client MUST MUST
+ * | 20             | Touch Event                       | Client SHOULD SHOULD
+ * | 21             | Framebuffer Alternative Text      | Server MAY MAY
+ * | 22             | Framebuffer Alternative Text Re-quest | Client MAY MAY
+ */
+#define rfbMLExt_ByeBye             0
+#define rfbMLExt_ServerDispCfg      1
+#define rfbMLExt_ClientDispCfg      2
+#define rfbMLExt_ServerEvtCfg       3
+#define rfbMLExt_ClientEvtCfg       4
+#define rfbMLExt_EvtMapping         5
+#define rfbMLExt_EvtMappingiReq     6
+#define rfbMLExt_KeyEvtListing      7
+#define rfbMLExt_KeyEvtListingReq   8
+#define rfbMLExt_VKBTrigger         9
+#define rfbMLExt_VKBTriggerReq      10
+#define rfbMLExt_DeviceStatus       11
+#define rfbMLExt_DeviceStatusReq    12
+#define rfbMLExt_ContentAttestationRes  13
+#define rfbMLExt_ContentAttestationReq  14
+#define rfbMLExt_FBBlockingNotify       16
+#define rfbMLExt_AudioBlockingNotify    18
+#define rfbMLExt_TouchEvt               20
+#define rfbMLExt_FBAlternativeText      21
+#define rfbMLExt_FBAlternativeTextReq   22
+
+#endif
 
 /*-----------------------------------------------------------------------------
  * Union of all server->client messages.

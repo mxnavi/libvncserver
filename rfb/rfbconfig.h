@@ -20,6 +20,11 @@
 /* Android host system detected */
 /* #undef LIBVNCSERVER_HAVE_ANDROID */
 
+/* VNC MIRROR LINK EXTENSION MESSAGES */
+#ifndef LIBVNCSERVER_HAVE_ML_EXT
+#define LIBVNCSERVER_HAVE_ML_EXT 1
+#endif
+
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 #ifndef LIBVNCSERVER_HAVE_ARPA_INET_H 
 #define LIBVNCSERVER_HAVE_ARPA_INET_H  1 
