@@ -1288,8 +1288,10 @@ typedef struct {
      * [5] : Server supports Framebuffer Alternative Text messages.
      */
     uint16_t fb_cfg;
-    uint16_t relative_w; /* Relative pixel width (set to zero, if relative width not known) */
-    uint16_t relative_h; /* Relative pixel Height (set to zero, if relative width not known) */
+    /* Relative pixel width (set to zero, if relative width not known) */
+    uint16_t relative_w;
+    /* Relative pixel Height (set to zero, if relative width not known) */
+    uint16_t relative_h;
     /**
      * Pixel format support (1 = yes, 0 = no)
      * [0] : 32-bit ARGB 888 (mandatory support for VNC Server)
@@ -1306,7 +1308,7 @@ typedef struct {
      * [25] : 8-bit single color (grayscale)
      *   Client MUST use red_shift and red_mask to set gray range
      */
-    uint32_t format_support; /* Pixel format support (1 = yes, 0 = no) */
+    uint32_t format_support;
 } rfbMLExt_ServerDispCfg_t;
 
 /**
@@ -1334,6 +1336,7 @@ typedef struct {
     uint16_t c_disp_w_mm; /* Client display width [mm] */
     uint16_t c_disp_h_mm; /* Client display height [mm] */
     uint16_t distance_user; /* Distance user – Client display [mm] */
+
     /**
      * Pixel format support (1 = yes, 0 = no)
      * [0] : 32-bit ARGB 888
@@ -1361,7 +1364,7 @@ typedef struct {
      * [10]: Resizing by factor of 2/3
      * [11]: Resizing by factor of 3/4
      */
-    uint32_t resize_factors; /* Supported resize factors (1 = support, 0 = not support) */
+    uint32_t resize_factors;
 } rfbMLExt_ClientDispCfg_t;
 
 /**
@@ -1369,10 +1372,15 @@ typedef struct {
  * Payload length: 28
  */
 typedef struct {
-    uint16_t language; /* Keyboard layout – Language code (according ISO 639-1) */
-    uint16_t country_code; /* Keyboard layout – Country code (according ISO 3166-1 alpha-2) */
-    uint16_t ui_language; /* UI Language – Language code (according ISO 639-1) */
-    uint16_t ui_country_code; /* UI Language – Country code (according ISO 3166-1 alpha-2) */
+    /* Keyboard layout – Language code (according ISO 639-1) */
+    uint16_t language;
+    /* Keyboard layout – Country code (according ISO 3166-1 alpha-2) */
+    uint16_t country_code;
+    /* UI Language – Language code (according ISO 639-1) */
+    uint16_t ui_language;
+    /* UI Language – Country code (according ISO 3166-1 alpha-2) */
+    uint16_t ui_country_code;
+
     /**
      * Knob keys (Bit mask according Table 40)
      * ‘1’: Server supports knob key events
@@ -1451,8 +1459,10 @@ typedef struct {
      * [3] : Key event list follows flag (0 = last list, 1 = event list follows)
      */
     uint8_t cfg_bits;
-    uint8_t key_evt_cnt; /* # key events in list */
-    uint16_t key_evt_counter; /* Key event counter */
+    /* # key events in list */
+    uint8_t key_evt_cnt;
+    /* Key event counter */
+    uint16_t key_evt_counter;
 
     /**
      * U32 array KeySymValue list used to define the next valid character
@@ -1474,7 +1484,7 @@ typedef struct {
      * [2] : Reset key event counter
      *
      */
-    uint32_t cfg_bits; /* Configuration (0 = Disable, 1 = Enable) */
+    uint32_t cfg_bits;
 } rfbMLExt_KeyEvtListingReq_t;
 
 /**
@@ -1609,34 +1619,90 @@ typedef struct {
  * Payload length: 122(Maximum size)
  */
 typedef struct {
-    uint16_t signedinfo_bits; /* SignedInfo Flag
-    Defines, what has been attested and included into
-    the hash (‘1’ = include, ‘0’ = do not include)
-    Note, that the MirrorLink server MAY choose to attest
-    different content than what was requested by the cli-
-    ent, i.e. the SignedInfo flag set in Content Attestation
-    Response MAY be different from the one in Content
-    Attestation Request. It is up to the client to decide
-    whether such attestation is acceptable.
+    /**
+     * SignedInfo Flag
+     * Defines, what has been attested and included into
+     * the hash (‘1’ = include, ‘0’ = do not include)
+     * Note, that the MirrorLink server MAY choose to attest
+     * different content than what was requested by the cli-
+     * ent, i.e. the SignedInfo flag set in Content Attestation
+     * Response MAY be different from the one in Content
+     * Attestation Request. It is up to the client to decide
+     * whether such attestation is acceptable.
+     *
+     * [0] : SignedInfo includes context information pseudo en-
+     * coding as provided within the last framebuffer update
+     * Note: Signature is calculated over all context infor-
+     * mation pseudo encoding rectangles (as defined in
+     * Table 31) in the Framebuffer Update message, i.e.
+     * excluding the 4 byte message header and any regu-
+     * lar framebuffer encoding.
+     *
+     * [1] : SignedInfo includes the framebuffer content, as pro-
+     * vided with the last framebuffer update
+     * Note: Signature is calculated over all rectangles in
+     * the Framebuffer Update message, i.e. excluding the
+     * 4 byte message header and any pseudo encoded
+     * rectangle (e.g. context information or desktop size).
+     *
+     * [2] : SignedInfo includes number of updated framebuffer
+     * pixels sent since previous content attestation re-
+     * sponse message
+     * Note: Signature is calculated over N = ∑ j ∑ i width i ∙
+     * height i , where i identifies the different rectangles
+     * within the regular framebuffer update j, i.e. excluding
+     * any pseudo encoded rectangle. N is a 32-bit un-
+     * signed integer (in network byte-order).)
     */
-    uint16_t err_code; /* Error code */
+    uint16_t signedinfo_bits;
+    /**
+     * Error code
+     * 0 Success – no change to SignedInfo flag
+     * 1 Success – with change to SignedInfo flag
+     * 2 Success – no signature added, no change to SignedInfo flag
+     * 3 Success – no signature added, with change to SignedInfo flag
+     * 128 Error – no session key
+     * 129 Error – content attestation not implemented
+     * 255 Error – other error
+     */
+    uint16_t err_code;
 
-    uint8_t signed_info[86]; /* SignedInfo * (Size dependent of SignedInfo Flag)*/
-    uint8_t signature[32]; /* (Optional) Signature */
-    uint8_t nonce[16]; /* Nonce as provided by the MirrorLink client in Content Attestation Request (Table 24))*/
-    uint16_t signedinfo_flag; /* SignedInfo flag that defines the attested content. The possible values are defined in Table 22*/
-    uint8_t ctx_hash[32]; /* (Optional) SHA-256 hash of context information
-    pseudo encoding, as provided within the last frame-
-    buffer update (as defined in Table 22)
-    Included if SignedInfo flag has bit 0 set.*/
-    uint8_t  fb_hash[32]; /* (Optional) SHA-256 hash of framebuffer content, as
-    provided with the last framebuffer update (as defined
-    in Table 22)
-    Included if SignedInfo flag has bit 1 set.*/
-    uint32_t number_fb_pixels; /* (Optional) Number of framebuffer pixels sent since
-    previous content attestation response message (asdefined in Table 22). 32-bit unsigned integer in net-
-    work byte order.
-    Included if SignedInfo flag has bit 2 set.*/
+    /**
+     * 18 - 86
+     * SignedInfo * (Size dependent of SignedInfo Flag)
+     */
+    uint8_t signed_info[86];
+    /* (Optional) Signature */
+    uint8_t signature[32];
+    /**
+     * Nonce as provided by the MirrorLink client in Content Attestation Request (Table 24))
+     */
+    uint8_t nonce[16];
+    /**
+     * SignedInfo flag that defines the attested content.
+     * The possible values are defined in Table 22
+     */
+    uint16_t signedinfo_flag;
+    /**
+     * (Optional) SHA-256 hash of context information
+     * pseudo encoding, as provided within the last frame-
+     * buffer update (as defined in Table 22)
+     * Included if SignedInfo flag has bit 0 set.
+     */
+    uint8_t ctx_hash[32];
+    /**
+     * (Optional) SHA-256 hash of framebuffer content, as
+     * provided with the last framebuffer update (as defined in Table 22)
+     * Included if SignedInfo flag has bit 1 set.
+     */
+    uint8_t  fb_hash[32];
+    /**
+     * (Optional) Number of framebuffer pixels sent since
+     * previous content attestation response message (asdefined in Table 22).
+     * 32-bit unsigned integer in network byte order.
+     * Included if SignedInfo flag has bit 2 set.
+     */
+    uint32_t number_fb_pixels;
 } rfbMLExt_ContentAttestationRes_t;
 
 /**
@@ -1644,15 +1710,45 @@ typedef struct {
  * Payload length: 20 + N
  */
 typedef struct {
-    uint8_t nonce[16]; /* Random Nonce */
-    uint16_t attested_bits; /* Defines, what MUST be attested and included into the hash (‘1’ = include, ‘0’ = do not include)*/
-    uint8_t signature_tyue; /* Used signature type */
-    uint8_t used_session_key; /* Used session key */
-    uint8_t session_key[0]; /* (Optional) Session key. The client MUST set session
-    key in the beginning of each session so that the
-    server does not have to remember previous session
-    keys and mapping of these keys to different client de-
-    vices.*/
+    /* Random Nonce */
+    uint8_t nonce[16];
+    /**
+     * Defines, what MUST be attested and included into the hash
+     * (‘1’ = include, ‘0’ = do not include)
+     * [0] Include context information pseudo encoding, as defined in Table 22
+     * [1] Include last framebuffer update, as defined in Table 22
+     * [2] Include number of pixels sent since previous content
+     *     attestation response message, as defined in Table 22
+     */
+    uint16_t attested_bits;
+    /**
+     * Used signature type
+     * 0 : No signature
+     * 1 : The signature algorithm is HMAC-SHA-256 signature.
+     *     The signed data is defined in Table 22.
+     */
+    uint8_t signature_tyue;
+    /**
+     * Used session key
+     * 0 : No session key included
+     * 1 : Random 128-bit symmetric session key that is en-
+     * crypted using the application specific public key that
+     * was bound to attestation of VNC Server. The encryp-
+     * tion is done according to RSAPKCS#1 v1.5 format.
+     * The session key is used from the MirrorLink server in
+     * all subsequent Content Attestation Response mes-
+     * sages, until a new key is provided in next Content At-
+     * testation Request.
+     */
+    uint8_t used_session_key;
+    /**
+     * (Optional) Session key. The client MUST set session
+     * key in the beginning of each session so that the
+     * server does not have to remember previous session
+     * keys and mapping of these keys to different client de-
+     * vices.
+     */
+    uint8_t session_key[0];
 } rfbMLExt_ContentAttestationReq_t;
 
 /**
@@ -1716,7 +1812,7 @@ typedef struct {
      * [3] Global audio muted
      * [4] Audio stream, as given by application ID, muted
      */
-    uint16_t reasion_bits; /* Reason for blocking (‘1’ = reason, ‘0’ no reason) */
+    uint16_t reasion_bits;
 } rfbMLExt_AudioBlockingNotify_t;
 
 /**
@@ -1730,9 +1826,13 @@ typedef struct {
         uint16_t x; /* X-position of the individual event */
         uint16_t y; /* Y-position of the individual event */
         uint8_t id; /* Event identifier */
-        uint8_t pressure; /* Pressure value A zero value (0) indicates a touch release event,
-                             A non-zero value indicates a touch press event,
-                             with the given pressure level.)*/
+
+        /**
+         * Pressure value A zero value (0) indicates a touch release event,
+         *  A non-zero value indicates a touch press event,
+         *  with the given pressure level.)
+         */
+        uint8_t pressure;
     } evts[0];
 } rfbMLExt_TouchEvt_t;
 
@@ -1753,7 +1853,8 @@ typedef struct {
      * mation for that application.
      */
     uint16_t textual_len;
-    uint8_t textual[0]; /* Array of U8, Textual information (free text format) */
+    /* Array of U8, Textual information (free text format) */
+    uint8_t textual[0];
 } rfbMLExt_FBAlternativeText_t;
 
 /**
@@ -1761,7 +1862,8 @@ typedef struct {
  * Payload length: 2
  */
 typedef struct {
-    uint16_t max_textual_len; /* Maximum length of the meta information. A zero length disables the feature.*/
+    /* Maximum length of the meta information. A zero length disables the feature.*/
+    uint16_t max_textual_len;
 } rfbMLExt_FBAlternativeTextReq_t;
 
 /**
