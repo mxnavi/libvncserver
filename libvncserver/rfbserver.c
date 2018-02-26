@@ -2041,6 +2041,14 @@ fail:
     return FALSE;
 }
 
+/**
+ * If the VNC Server wants to terminate the VNC session, it MUST send a VNC ByeBye message. The
+ * VNC client MUST disconnect the TCP connection on reception of that VNC ByeBye message.
+ *
+ * If the VNC Client wants to terminate the VNC session, it MUST send a VNC ByeBye message. The
+ * VNC server MUST respond with a VNC ByeBye message. The VNC client MUST disconnect the
+ * TCP connection on reception of that VNC ByeBye message
+ */
 static void rfbProcessMLExt_ByeBye(rfbClientPtr cl, const rfbMLExtMsg *msg,
                                    const char *payload)
 {
@@ -2422,6 +2430,11 @@ rfbProcessClientNormalMessage(rfbClientPtr cl)
                   cl->enableServerIdentity = TRUE;
                 }
                 break;
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
+        case rfbMLExt_PseudoEncoding_523:
+            break;
+#endif
+
 	    case rfbEncodingXvp:
 	        rfbLog("Enabling Xvp protocol extension for client "
 		        "%s\n", cl->host);
