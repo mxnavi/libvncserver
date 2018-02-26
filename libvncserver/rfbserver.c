@@ -2887,13 +2887,14 @@ rfbProcessClientNormalMessage(rfbClientPtr cl)
     case rfbMLExt: {
         assert(sizeof(rfbMLExtMsg) == sz_rfbMLExtMsg);
 
-        if ((n = rfbReadExact(cl, ((char *)&msg) + 1, sz_rfbMLExtMsgi - 1)) <= 0) {
+        if ((n = rfbReadExact(cl, ((char *)&msg) + 1, sz_rfbMLExtMsg - 1)) <= 0) {
             if (n != 0) {
                 rfbLogPerror("rfbProcessClientNormalMessage: read");
             }
             rfbCloseClient(cl);
             return;
         }
+        rfbStatRecordMessageRcvd(cl, msg.type, sz_rfbMLExtMsg, sz_rfbMLExtMsg);
         msg.ml.length = Swap16IfLE(msg.ml.length);
         rfbProcessMLExt(cl, &msg.ml);
         return;
