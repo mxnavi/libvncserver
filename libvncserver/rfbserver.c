@@ -2885,18 +2885,17 @@ rfbProcessClientNormalMessage(rfbClientPtr cl)
 
 #ifdef LIBVNCSERVER_HAVE_ML_EXT
     case rfbMLExt: {
-        rfbMLExtMsg ml_msg;
-        assert(sizeof(ml_msg) == sz_rfbMLExtMsg);
+        assert(sizeof(rfbMLExtMsg) == sz_rfbMLExtMsg);
 
-        if ((n = rfbReadExact(cl, (char *)&ml_msg, sz_rfbMLExtMsg)) <= 0) {
+        if ((n = rfbReadExact(cl, ((char *)&msg) + 1, sz_rfbMLExtMsgi - 1)) <= 0) {
             if (n != 0) {
                 rfbLogPerror("rfbProcessClientNormalMessage: read");
             }
             rfbCloseClient(cl);
             return;
         }
-        ml_msg.length = Swap16IfLE(ml_msg.length);
-        rfbProcessMLExt(cl, &ml_msg);
+        msg.ml.length = Swap16IfLE(msg.ml.length);
+        rfbProcessMLExt(cl, &msg.ml);
         return;
     }
 #endif

@@ -1876,28 +1876,28 @@ typedef struct {
  * Framebuffer Update messages.
  * Mandatory
  */
-#define rfbMLExt_PseudoEncoding_523 (-523)
+#define rfbMLExt_PseudoEncoding_523 /* (-523) */ 0xFFFFFDF5
 /**
  * Context Information
  * Indicate context information within a
  * Framebuffer Update message
  * Mandatory
  */
-#define rfbMLExt_PseudoEncoding_524 (-524)
+#define rfbMLExt_PseudoEncoding_524 /* (-524) */ 0xFFFFFDF4
 
 /**
  * Desktop Size
  * Change the VNC Server’s framebuffer resolution
  * Mandatory
  */
-#define rfbMLExt_PseudoEncoding_223 (-223)
+#define rfbMLExt_PseudoEncoding_223 /* (-223) */ 0xFFFFFF21
 
 /**
  * Run-length-encoding
  * Scan line based run-length-encoding
  * Optional
  */
-#define rfbMLExt_Encoding_525 (-525)
+#define rfbMLExt_Encoding_525 /* (-525) */ 0xFFFFFDF3
 
 /**
  * Transform Encoding
@@ -1906,7 +1906,7 @@ typedef struct {
  * used within the framebuffer update
  * Optional
  */
-#define rfbMLExt_Encoding_526 (-526)
+#define rfbMLExt_Encoding_526 /* (-526) */ 0xFFFFFDF2
 
 #endif
 
@@ -2181,6 +2181,9 @@ typedef union {
 	rfbSetSWMsg sw;
 	rfbTextChatMsg tc;
         rfbXvpMsg xvp;
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
+    rfbMLExtMsg ml;
+#endif
 } rfbClientToServerMsg;
 
 /* 
