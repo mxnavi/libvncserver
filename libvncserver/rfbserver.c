@@ -1977,7 +1977,7 @@ fail:
     return FALSE;
 }
 
-#ifdef LIBVNCSERVER_HAVE_ML_EXT
+#if 0 //def LIBVNCSERVER_HAVE_ML_EXT
 static char *rfbProcessMLExtReadBuffer(rfbClientPtr cl, uint16_t length)
 {
     char *buffer = NULL;
@@ -2430,7 +2430,7 @@ rfbProcessClientNormalMessage(rfbClientPtr cl)
                   cl->enableServerIdentity = TRUE;
                 }
                 break;
-#ifdef LIBVNCSERVER_HAVE_ML_EXT
+#if 0 // def LIBVNCSERVER_HAVE_ML_EXT
         case rfbMLExt_PseudoEncoding_523:
             break;
 #endif
@@ -2883,7 +2883,7 @@ rfbProcessClientNormalMessage(rfbClientPtr cl)
       }
       return;
 
-#ifdef LIBVNCSERVER_HAVE_ML_EXT
+#if 0// def LIBVNCSERVER_HAVE_ML_EXT
     case rfbMLExt: {
         assert(sizeof(rfbMLExtMsg) == sz_rfbMLExtMsg);
 
