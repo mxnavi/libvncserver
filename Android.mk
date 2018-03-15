@@ -7,10 +7,11 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/include \
                     $(LOCAL_PATH)/libvncserver \
                     $(LOCAL_PATH) \
                     $(LOCAL_PATH)/common \
-                    external/jpeg \
                     external/zlib \
-                    external/libpng \
-                    external/openssl/include
+
+                    #external/libpng \
+                    external/openssl/include \
+                    external/jpeg \
 
 LOCAL_SRC_FILES := libvncserver/auth.c \
                    libvncserver/cargs.c \
@@ -39,7 +40,6 @@ LOCAL_SRC_FILES := libvncserver/auth.c \
                    common/d3des.c \
                    common/minilzo.c \
                    common/sha1.c \
-                   common/turbojpeg.c \
                    common/vncauth.c \
                    test/bmp.c
 
@@ -48,6 +48,7 @@ LOCAL_SRC_FILES := libvncserver/auth.c \
                    libvncserver/rfbcrypto_openssl.c \
                    libvncserver/rfbssl_openssl.c \
                    libvncserver/websockets.c \
+                   common/turbojpeg.c \
 
 #LOCAL_STATIC_LIBRARIES := libz libpng libjpeg_static
 #LOCAL_SHARED_LIBRARIES := libssl
