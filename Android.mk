@@ -22,23 +22,20 @@ LOCAL_SRC_FILES := libvncserver/auth.c \
                    libvncserver/hextile.c \
                    libvncserver/httpd.c \
                    libvncserver/main.c \
-                   libvncserver/rfbcrypto_openssl.c \
                    libvncserver/rfbregion.c \
                    libvncserver/rfbserver.c \
-                   libvncserver/rfbssl_openssl.c \
                    libvncserver/rre.c \
                    libvncserver/scale.c \
                    libvncserver/selbox.c \
                    libvncserver/sockets.c \
                    libvncserver/stats.c \
-                   libvncserver/tight.c \
                    libvncserver/translate.c \
                    libvncserver/ultra.c \
-                   libvncserver/websockets.c \
                    libvncserver/zlib.c \
                    libvncserver/zrle.c \
                    libvncserver/zrleoutstream.c \
                    libvncserver/zrlepalettehelper.c \
+                   libvncserver/rfbssl_none.c \
                    common/d3des.c \
                    common/minilzo.c \
                    common/sha1.c \
@@ -46,9 +43,20 @@ LOCAL_SRC_FILES := libvncserver/auth.c \
                    common/vncauth.c \
                    test/bmp.c
 
-LOCAL_STATIC_LIBRARIES := libz libpng libjpeg_static
-LOCAL_SHARED_LIBRARIES := libssl
+
+                   #libvncserver/tight.c \
+                   libvncserver/rfbcrypto_openssl.c \
+                   libvncserver/rfbssl_openssl.c \
+                   libvncserver/websockets.c \
+
+#LOCAL_STATIC_LIBRARIES := libz libpng libjpeg_static
+#LOCAL_SHARED_LIBRARIES := libssl
+
 LOCAL_CFLAGS := \
+    -ULIBVNCSERVER_HAVE_LIBSSL  -ULIBVNCSERVER_HAVE_TLS \
+    -ULIBVNCSERVER_HAVE_LIBJPEG -ULIBVNCSERVER_HAVE_LIBNSL \
+    -ULIBVNCSERVER_HAVE_LIBPNG -ULIBVNCSERVER_HAVE_X11 -ULIBVNCSERVER_IPv6 \
+    -ULIBVNCSERVER_WITH_WEBSOCKETS \
     -D__ANDROID__ -DHAVE_LIBSSL -DWITH_WEBSOCKETS \
     -Wall
 

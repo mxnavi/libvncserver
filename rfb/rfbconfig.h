@@ -93,7 +93,9 @@
 #endif
 
 /* Define to 1 if you have the `getuid' function. */
-/* #undef LIBVNCSERVER_HAVE_GETUID */
+#ifndef LIBVNCSERVER_HAVE_GETUID
+#define LIBVNCSERVER_HAVE_GETUID 1
+#endif
 
 /* GnuTLS library present */
 /* #undef LIBVNCSERVER_HAVE_GNUTLS */
@@ -130,17 +132,17 @@
 
 /* libjpeg support enabled */
 #ifndef LIBVNCSERVER_HAVE_LIBJPEG 
-#define LIBVNCSERVER_HAVE_LIBJPEG  1 
+//#define LIBVNCSERVER_HAVE_LIBJPEG  1 
 #endif
 
 /* Define to 1 if you have the `nsl' library (-lnsl). */
 #ifndef LIBVNCSERVER_HAVE_LIBNSL 
-#define LIBVNCSERVER_HAVE_LIBNSL  1 
+// #define LIBVNCSERVER_HAVE_LIBNSL  1 
 #endif
 
 /* Define to 1 if you have the `png' library (-lpng). */
 #ifndef LIBVNCSERVER_HAVE_LIBPNG 
-#define LIBVNCSERVER_HAVE_LIBPNG  1 
+//#define LIBVNCSERVER_HAVE_LIBPNG  1 
 #endif
 
 /* Define to 1 if you have the `pthread' library (-lpthread). */
@@ -153,7 +155,7 @@
 
 /* openssl libssl library present */
 #ifndef LIBVNCSERVER_HAVE_LIBSSL 
-#define LIBVNCSERVER_HAVE_LIBSSL  1 
+//#define LIBVNCSERVER_HAVE_LIBSSL  1 
 #endif
 
 /* XDAMAGE extension build environment present */
@@ -417,7 +419,7 @@
 
 /* X11 build environment present */
 #ifndef LIBVNCSERVER_HAVE_X11 
-#define LIBVNCSERVER_HAVE_X11  1 
+//#define LIBVNCSERVER_HAVE_X11  1 
 #endif
 
 /* open ssl X509_print_ex_fp available */
@@ -437,7 +439,7 @@
 
 /* Enable IPv6 support */
 #ifndef LIBVNCSERVER_IPv6 
-#define LIBVNCSERVER_IPv6  1 
+//#define LIBVNCSERVER_IPv6  1 
 #endif
 
 /* Define to 1 if `lstat' dereferences a symlink specified with a trailing
@@ -527,7 +529,7 @@
 
 /* Disable WebSockets support */
 #ifndef LIBVNCSERVER_WITH_WEBSOCKETS 
-#define LIBVNCSERVER_WITH_WEBSOCKETS  1 
+//#define LIBVNCSERVER_WITH_WEBSOCKETS  1 
 #endif
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
