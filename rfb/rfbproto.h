@@ -1837,8 +1837,7 @@ typedef struct {
          */
         uint8_t pressure;
     } ML_EXT_MSG_PACKED evts[0];
-} rfbMLExt_TouchEvt_t;
-
+} ML_EXT_MSG_PACKED rfbMLExt_TouchEvt_t;
 
 /**
  * Framebuffer Alternative Text
