@@ -1195,6 +1195,9 @@ typedef struct {
 
 
 #ifdef LIBVNCSERVER_HAVE_ML_EXT
+
+
+#define ML_EXT_MSG_PACKED  __attribute__ ((packed))
 /**
  * 5 VNC MIRROR LINK EXTENSION MESSAGES
  */
@@ -1218,7 +1221,7 @@ typedef struct {
     uint8_t ext_type;
     uint16_t length;
     /* followed by uint8[length] which is Message specific payload data */
-} rfbMLExtMsg;
+} ML_EXT_MSG_PACKED rfbMLExtMsg;
 
 #define sz_rfbMLExtMsg 4
 
@@ -1309,7 +1312,7 @@ typedef struct {
      *   Client MUST use red_shift and red_mask to set gray range
      */
     uint32_t format_support;
-} rfbMLExt_ServerDispCfg_t;
+} ML_EXT_MSG_PACKED rfbMLExt_ServerDispCfg_t;
 
 /**
  * Client Display Configuration
@@ -1365,7 +1368,7 @@ typedef struct {
      * [11]: Resizing by factor of 3/4
      */
     uint32_t resize_factors;
-} rfbMLExt_ClientDispCfg_t;
+} ML_EXT_MSG_PACKED rfbMLExt_ClientDispCfg_t;
 
 /**
  * Server/Client Event Configuration
@@ -1426,7 +1429,7 @@ typedef struct {
      *   touch events.
      */
     uint32_t pointer_related;
-} rfbMLExt_EvtCft_t;
+} ML_EXT_MSG_PACKED rfbMLExt_EvtCft_t;
 
 /**
  * Event Mapping / Mapping Request
@@ -1440,7 +1443,7 @@ typedef struct {
      *  (0 = request value from server)
      */
     uint32_t s_key;
-} rfbMLExt_EvtMapping_t;
+} ML_EXT_MSG_PACKED rfbMLExt_EvtMapping_t;
 
 /**
  * Key Event Listing
@@ -1468,7 +1471,7 @@ typedef struct {
      * U32 array KeySymValue list used to define the next valid character
      */
     uint32_t key_sym_value[0];
-} rfbMLExt_KeyEvtListing_t;
+} ML_EXT_MSG_PACKED rfbMLExt_KeyEvtListing_t;
 
 /**
  * Key Event Listing Request
@@ -1485,7 +1488,7 @@ typedef struct {
      *
      */
     uint32_t cfg_bits;
-} rfbMLExt_KeyEvtListingReq_t;
+} ML_EXT_MSG_PACKED rfbMLExt_KeyEvtListingReq_t;
 
 /**
  * Virtual Keyboard Trigger
@@ -1513,7 +1516,7 @@ typedef struct {
     uint16_t text_y; /* Text input area – Y-Position */
     uint16_t text_w; /* Text input area – Width */
     uint16_t text_h; /* Text input area – Height */
-} rfbMLExt_VKBTrigger_t;
+} ML_EXT_MSG_PACKED rfbMLExt_VKBTrigger_t;
 
 /**
  * Virtual Keyboard Trigger Request
@@ -1528,7 +1531,7 @@ typedef struct {
      *          zero value (0) indicates no length limitation.
      */
     uint32_t cfg_bits;
-} rfbMLExt_VKBTriggerReq_t;
+} ML_EXT_MSG_PACKED rfbMLExt_VKBTriggerReq_t;
 
 
 /**
@@ -1581,7 +1584,7 @@ typedef struct {
      * 10 = Landscape, 11 = Portrait)
      */
     uint32_t sts_bits;
-} rfbMLExt_DeviceStatus_t;
+} ML_EXT_MSG_PACKED rfbMLExt_DeviceStatus_t;
 
 /**
  * Device Status Request
@@ -1612,7 +1615,7 @@ typedef struct {
      * 10 = Landscape, 11 = Portrait)
      */
     uint32_t sts_bits;
-} rfbMLExt_DeviceStatusReq_t;
+} ML_EXT_MSG_PACKED rfbMLExt_DeviceStatusReq_t;
 
 /**
  * Content Attestation Response
@@ -1703,7 +1706,7 @@ typedef struct {
      * Included if SignedInfo flag has bit 2 set.
      */
     uint32_t number_fb_pixels;
-} rfbMLExt_ContentAttestationRes_t;
+} ML_EXT_MSG_PACKED rfbMLExt_ContentAttestationRes_t;
 
 /**
  * Content Attestation Request
@@ -1749,7 +1752,7 @@ typedef struct {
      * vices.
      */
     uint8_t session_key[0];
-} rfbMLExt_ContentAttestationReq_t;
+} ML_EXT_MSG_PACKED rfbMLExt_ContentAttestationReq_t;
 
 /**
  * Framebuffer Blocking Notification
@@ -1788,7 +1791,7 @@ typedef struct {
      */
     uint16_t reasion_bits;
 
-} rfbMLExt_FBBlockingNotify_t;
+} ML_EXT_MSG_PACKED rfbMLExt_FBBlockingNotify_t;
 
 /**
  * Audio Blocking Notification
@@ -1813,7 +1816,7 @@ typedef struct {
      * [4] Audio stream, as given by application ID, muted
      */
     uint16_t reasion_bits;
-} rfbMLExt_AudioBlockingNotify_t;
+} ML_EXT_MSG_PACKED rfbMLExt_AudioBlockingNotify_t;
 
 /**
  * Touch Event
@@ -1833,7 +1836,7 @@ typedef struct {
          *  with the given pressure level.)
          */
         uint8_t pressure;
-    } evts[0];
+    } ML_EXT_MSG_PACKED evts[0];
 } rfbMLExt_TouchEvt_t;
 
 
@@ -1855,7 +1858,7 @@ typedef struct {
     uint16_t textual_len;
     /* Array of U8, Textual information (free text format) */
     uint8_t textual[0];
-} rfbMLExt_FBAlternativeText_t;
+} ML_EXT_MSG_PACKED rfbMLExt_FBAlternativeText_t;
 
 /**
  * Framebuffer Alternative Text Request
@@ -1864,7 +1867,7 @@ typedef struct {
 typedef struct {
     /* Maximum length of the meta information. A zero length disables the feature.*/
     uint16_t max_textual_len;
-} rfbMLExt_FBAlternativeTextReq_t;
+} ML_EXT_MSG_PACKED rfbMLExt_FBAlternativeTextReq_t;
 
 /**
  * 6 A DDITIONAL ENCODINGS AND PSEUDOENCODINGS
