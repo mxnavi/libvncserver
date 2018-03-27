@@ -70,6 +70,7 @@ rfbRegisterProtocolExtension(rfbProtocolExtension* extension)
 {
 	rfbProtocolExtension *head = rfbExtensionHead, *next = NULL;
 
+    rfbLog("rfbRegisterProtocolExtension() %p", extension);
 	if(extension == NULL)
 		return;
 
@@ -110,6 +111,7 @@ rfbUnregisterProtocolExtension(rfbProtocolExtension* extension)
 
 	rfbProtocolExtension *cur = NULL, *pre = NULL;
 
+    rfbLog("rfbUnregisterProtocolExtension() %p", extension);
 	if(extension == NULL)
 		return;
 
@@ -145,6 +147,7 @@ rfbUnregisterProtocolExtension(rfbProtocolExtension* extension)
 
 rfbProtocolExtension* rfbGetExtensionIterator()
 {
+    rfbLog("rfbGetExtensionIterator()");
 	if (! extMutex_initialized) {
 		INIT_MUTEX(extMutex);
 		extMutex_initialized = 1;
@@ -156,6 +159,7 @@ rfbProtocolExtension* rfbGetExtensionIterator()
 
 void rfbReleaseExtensionIterator()
 {
+    rfbLog("rfbReleaseExtensionIterator()");
 	UNLOCK(extMutex);
 }
 
@@ -163,6 +167,8 @@ rfbBool rfbEnableExtension(rfbClientPtr cl, rfbProtocolExtension* extension,
 	void* data)
 {
 	rfbExtensionData* extData;
+
+    rfbLog("rfbEnableExtension() cl: %p extension: %p", cl, extension);
 
 	/* make sure extension is not yet enabled. */
 	for(extData = cl->extensions; extData; extData = extData->next)
@@ -183,6 +189,7 @@ rfbBool rfbDisableExtension(rfbClientPtr cl, rfbProtocolExtension* extension)
 	rfbExtensionData* extData;
 	rfbExtensionData* prevData = NULL;
 
+    rfbLog("rfbDisableExtension() cl: %p extension: %p", cl, extension);
 	for(extData = cl->extensions; extData; extData = extData->next) {
 		if(extData->extension == extension) {
 			if(extData->data)
@@ -220,6 +227,7 @@ void* rfbGetExtensionClientData(rfbClientPtr cl, rfbProtocolExtension* extension
  */
 
 void rfbLogEnable(int enabled) {
+  rfbLog("rfbLogEnable() enabled: %d", enabled);
   rfbEnableLogging=enabled;
 }
 
@@ -418,6 +426,7 @@ void rfbMarkRectAsModified(rfbScreenInfoPtr screen,int x1,int y1,int x2,int y2)
    sraRegionPtr region;
    int i;
 
+    rfbLog("rfbMarkRectAsModified: screen: %p (%d %d %d %d)", screen, x1, y1, x2, y2);
    if(x1>x2) { i=x1; x1=x2; x2=i; }
    if(x1<0) x1=0;
    if(x2>screen->width) x2=screen->width;
@@ -446,6 +455,7 @@ clientOutput(void *data)
     rfbBool haveUpdate;
     sraRegion* updateRegion;
 
+    rfbLog("clientOutput() running");
     while (1) {
         haveUpdate = false;
         while (!haveUpdate) {
@@ -512,6 +522,7 @@ clientInput(void *data)
     pthread_t output_thread;
     pthread_create(&output_thread, NULL, clientOutput, (void *)cl);
 
+    rfbLog("clientInput() running");
     while (1) {
 	fd_set rfds, wfds, efds;
 	struct timeval tv;
@@ -574,6 +585,7 @@ listenerRun(void *data)
     socklen_t len;
     fd_set listen_fds;  /* temp file descriptor list for select() */
 
+    rfbLog("listenerRun running");
     /* TODO: this thread wont die by restarting the server */
     /* TODO: HTTP is not handled */
     while (1) {
@@ -596,6 +608,7 @@ listenerRun(void *data)
 	else if (FD_ISSET(screen->listen6Sock, &listen_fds))
 	    client_fd = accept(screen->listen6Sock, (struct sockaddr*)&peer, &len);
 
+    rfbLog("client_fd: %d", client_fd);
 	if(client_fd >= 0)
 	  cl = rfbNewClient(screen,client_fd);
 	if (cl && !cl->onHold )
@@ -1049,6 +1062,7 @@ void rfbInitServer(rfbScreenInfoPtr screen)
   WSADATA trash;
   WSAStartup(MAKEWORD(2,2),&trash);
 #endif
+  rfbLog("rfbInitServer() screen: %p", screen);
   rfbInitSockets(screen);
   rfbHttpInitSockets(screen);
 #ifndef WIN32
@@ -1058,6 +1072,7 @@ void rfbInitServer(rfbScreenInfoPtr screen)
 }
 
 void rfbShutdownServer(rfbScreenInfoPtr screen,rfbBool disconnectClients) {
+  rfbLog("rfbShutdownServer() screen: %p disconnectClients: %d", screen, disconnectClients);
   if(disconnectClients) {
     rfbClientPtr cl;
     rfbClientIteratorPtr iter = rfbGetClientIterator(screen);
@@ -1179,6 +1194,7 @@ rfbBool rfbIsActive(rfbScreenInfoPtr screenInfo) {
 void rfbRunEventLoop(rfbScreenInfoPtr screen, long usec, rfbBool runInBackground)
 {
   if(runInBackground) {
+      rfbLog("create listener thread");
 #ifdef LIBVNCSERVER_HAVE_LIBPTHREAD
        pthread_t listener_thread;
 

@@ -248,6 +248,7 @@ void
 rfbNewClientConnection(rfbScreenInfoPtr rfbScreen,
                        int sock)
 {
+    rfbLog("rfbNewClientConnection() rfbscreen: %p sock: %d", rfbScreen, sock);
     rfbNewClient(rfbScreen,sock);
 }
 
@@ -478,7 +479,7 @@ rfbNewTCPOrUDPClient(rfbScreenInfoPtr rfbScreen,
       if (rfbWriteExact(cl, pv, sz_rfbProtocolVersionMsg) < 0) {
         rfbLogPerror("rfbNewClient: write");
         rfbCloseClient(cl);
-	rfbClientConnectionGone(cl);
+        rfbClientConnectionGone(cl);
         return NULL;
       }
     }
@@ -534,6 +535,8 @@ rfbClientConnectionGone(rfbClientPtr cl)
 #if defined(LIBVNCSERVER_HAVE_LIBZ) && defined(LIBVNCSERVER_HAVE_LIBJPEG)
     int i;
 #endif
+
+    rfbLog("rfbClientConnectionGone() cl: %p", cl);
 
     LOCK(rfbClientListMutex);
 
@@ -632,6 +635,7 @@ rfbClientConnectionGone(rfbClientPtr cl)
 void
 rfbProcessClientMessage(rfbClientPtr cl)
 {
+    rfbLog("rfbProcessClientMessage() cl: %p state: %d", cl, cl->state);
     switch (cl->state) {
     case RFB_PROTOCOL_VERSION:
         rfbProcessClientProtocolVersion(cl);
@@ -663,6 +667,8 @@ rfbProcessClientProtocolVersion(rfbClientPtr cl)
 {
     rfbProtocolVersionMsg pv;
     int n, major_, minor_;
+
+    rfbLog("rfbProcessClientProtocolVersion() cl: %p", cl);
 
     if ((n = rfbReadExact(cl, pv, sz_rfbProtocolVersionMsg)) <= 0) {
         if (n == 0)
@@ -771,6 +777,7 @@ rfbProcessClientInitMessage(rfbClientPtr cl)
     rfbClientPtr otherCl;
     rfbExtensionData* extension;
 
+    rfbLog("rfbProcessClientInitMessage() cl: %p", cl);
     if (cl->state == RFB_INITIALISATION_SHARED) {
         /* In this case behave as though an implicit ClientInit message has
          * already been received with a shared-flag of true. */
@@ -2221,6 +2228,7 @@ rfbProcessClientNormalMessage(rfbClientPtr cl)
         return;
     }
 
+    rfbLog("rfbProcessClientNormalMessage() cl: %p %d", cl, msg.type);
     switch (msg.type) {
 
     case rfbSetPixelFormat:
@@ -2950,7 +2958,8 @@ rfbSendFramebufferUpdate(rfbClientPtr cl,
     rfbBool sendSupportedEncodings = FALSE;
     rfbBool sendServerIdentity = FALSE;
     rfbBool result = TRUE;
-    
+
+    rfbLog("rfbSendFramebufferUpdate() cl: %p", cl);
 
     if(cl->screen->displayHook)
       cl->screen->displayHook(cl);

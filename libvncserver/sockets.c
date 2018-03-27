@@ -491,6 +491,7 @@ rfbCloseClient(rfbClientPtr cl)
 {
     rfbExtensionData* extension;
 
+    rfbLog("rfbCloseClient() cl: %p", cl);
     for(extension=cl->extensions; extension; extension=extension->next)
 	if(extension->extension->close)
 	    extension->extension->close(cl, extension->data);

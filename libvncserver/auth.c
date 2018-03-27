@@ -333,6 +333,7 @@ rfbProcessClientSecurityType(rfbClientPtr cl)
     uint8_t chosenType;
     rfbSecurityHandler* handler;
     
+    rfbLog("rfbProcessClientSecurityType() cl: %p", cl);
     /* Read the security type. */
     n = rfbReadExact(cl, (char *)&chosenType, 1);
     if (n <= 0) {
@@ -371,6 +372,7 @@ rfbAuthProcessClientMessage(rfbClientPtr cl)
     uint8_t response[CHALLENGESIZE];
     uint32_t authResult;
 
+    rfbLog("rfbAuthProcessClientMessage() cl: %p", cl);
     if ((n = rfbReadExact(cl, (char *)response, CHALLENGESIZE)) <= 0) {
         if (n != 0)
             rfbLogPerror("rfbAuthProcessClientMessage: read");
