@@ -1892,7 +1892,9 @@ typedef struct {
  * Mandatory
  * same with rfbEncodingNewFBSize
  */
-#define rfbMLExt_PseudoEncoding_223 /* (-223) */ 0xFFFFFF21
+#define rfbMLExt_PseudoEncoding_223                                            \
+    rfbEncodingNewFBSize /* (-223) 0xFFFFFF21                                  \
+                            */
 
 /**
  * Run-length-encoding
