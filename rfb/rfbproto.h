@@ -1873,16 +1873,15 @@ typedef struct {
  */
 /**
  * MirrorLink Encoding
- * Advertise the support of MirrorLink ex-
- * tension messages. Not used within
- * Framebuffer Update messages.
+ * Advertise the support of MirrorLink extension messages.
+ * Not used within Framebuffer Update messages.
  * Mandatory
  */
 #define rfbMLExt_PseudoEncoding_523 /* (-523) */ 0xFFFFFDF5
+
 /**
  * Context Information
- * Indicate context information within a
- * Framebuffer Update message
+ * Indicate context information within a Framebuffer Update message
  * Mandatory
  */
 #define rfbMLExt_PseudoEncoding_524 /* (-524) */ 0xFFFFFDF4
@@ -1891,6 +1890,7 @@ typedef struct {
  * Desktop Size
  * Change the VNC Server’s framebuffer resolution
  * Mandatory
+ * same with rfbEncodingNewFBSize
  */
 #define rfbMLExt_PseudoEncoding_223 /* (-223) */ 0xFFFFFF21
 
@@ -1903,8 +1903,7 @@ typedef struct {
 
 /**
  * Transform Encoding
- * Framebuffer encoding, which includes
- * a pixel format and a down-scale factor
+ * Framebuffer encoding, which includes a pixel format and a down-scale factor
  * used within the framebuffer update
  * Optional
  */
