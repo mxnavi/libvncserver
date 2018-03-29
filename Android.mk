@@ -68,6 +68,8 @@ LOCAL_CFLAGS := \
     -Wno-unused-parameter \
     -Wno-user-defined-warnings \
 
+LOCAL_CFLAGS += -O3 -fstrict-aliasing -fprefetch-loop-arrays -fvisibility=hidden
+
 #LOCAL_SDK_VERSION := 14
 
 include $(BUILD_STATIC_LIBRARY)
