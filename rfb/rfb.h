@@ -625,6 +625,9 @@ typedef struct _rfbClientRec {
     rfbBool enableLastRectEncoding;   /**< client supports LastRect encoding */
     rfbBool enableCursorShapeUpdates; /**< client supports cursor shape updates */
     rfbBool enableCursorPosUpdates;   /**< client supports cursor position updates */
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
+    rfbBool enableMLExtContextInformation; /**< client supports context information encoding for mirrorlink */
+#endif
     rfbBool useRichCursorEncoding;    /**< rfbEncodingRichCursor is preferred */
     rfbBool cursorWasChanged;         /**< cursor shape update should be sent */
     rfbBool cursorWasMoved;           /**< cursor position update should be sent */

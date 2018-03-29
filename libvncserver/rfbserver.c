@@ -437,6 +437,9 @@ rfbNewTCPOrUDPClient(rfbScreenInfoPtr rfbScreen,
       cl->enableSupportedMessages = FALSE;
       cl->enableSupportedEncodings = FALSE;
       cl->enableServerIdentity = FALSE;
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
+      cl->enableMLExtContextInformation = FALSE;
+#endif
       cl->lastKeyboardLedState = -1;
       cl->cursorX = rfbScreen->cursorX;
       cl->cursorY = rfbScreen->cursorY;
@@ -1116,6 +1119,60 @@ rfbSendServerIdentity(rfbClientPtr cl)
 
     return TRUE;
 }
+
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
+/*
+ * Send rfbMLExt_PseudoEncoding_524.
+ */
+
+rfbBool
+rfbMLExtSendContextInformation(rfbClientPtr cl)
+{
+    rfbFramebufferUpdateRectHeader rect;
+	rfbMLExt_ContextInformation_t  context_information;
+
+    if (cl->ublen + sz_rfbFramebufferUpdateRectHeader
+                  + sz_rfbMLExtContextInformation> UPDATE_BUF_SIZE) {
+        if (!rfbSendUpdateBuf(cl))
+            return FALSE;
+    }
+
+    rect.encoding = Swap32IfLE(rfbMLExt_PseudoEncoding_524);
+    rect.r.x = 0;
+    rect.r.y = 0;
+    rect.r.w = Swap16IfLE(800);
+    rect.r.h = Swap16IfLE(480);
+
+    memcpy(&cl->updateBuf[cl->ublen], (char *)&rect,
+        sz_rfbFramebufferUpdateRectHeader);
+    cl->ublen += sz_rfbFramebufferUpdateRectHeader;
+
+    memset((char *)&context_information, 0, sz_rfbMLExtContextInformation);
+
+    context_information.app_unique_id = Swap32IfLE(0);
+
+    context_information.app_category_trust_level     = Swap16IfLE(0x0040);
+    context_information.content_category_trust_level = Swap16IfLE(0x0040);
+
+    context_information.app_category     = Swap32IfLE(0x5);
+    context_information.content_category = Swap32IfLE(0x4);
+
+    context_information.content_rules_bits = Swap32IfLE(0x1);
+
+    memcpy(&cl->updateBuf[cl->ublen], (char *)&context_information, sz_rfbMLExtContextInformation);
+    cl->ublen += sz_rfbMLExtContextInformation;
+
+    rfbStatRecordEncodingSent(cl, rfbMLExt_PseudoEncoding_524,
+        sz_rfbFramebufferUpdateRectHeader+sz_rfbMLExtContextInformation,
+        sz_rfbFramebufferUpdateRectHeader+sz_rfbMLExtContextInformation);
+
+    if (!rfbSendUpdateBuf(cl))
+        return FALSE;
+
+    return TRUE;
+}
+#endif
+
 
 /*
  * Send an xvp server message
@@ -2957,6 +3014,9 @@ rfbSendFramebufferUpdate(rfbClientPtr cl,
     rfbBool sendSupportedMessages = FALSE;
     rfbBool sendSupportedEncodings = FALSE;
     rfbBool sendServerIdentity = FALSE;
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
+    rfbBool sendMLExtContextInformation = FALSE;
+#endif
     rfbBool result = TRUE;
 
     rfbLog("rfbSendFramebufferUpdate() cl: %p", cl);
@@ -3052,6 +3112,14 @@ rfbSendFramebufferUpdate(rfbClientPtr cl,
          */
         cl->enableServerIdentity = FALSE;
     }
+
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
+    if (cl->enableMLExtContextInformation)
+    {
+        sendMLExtContextInformation = TRUE;
+        cl->enableMLExtContextInformation = FALSE;
+	}
+#endif
 
     LOCK(cl->updateMutex);
 
@@ -3286,14 +3354,28 @@ rfbSendFramebufferUpdate(rfbClientPtr cl,
 	    updateRegion = newUpdateRegion;
 	    nUpdateRegionRects = sraRgnCountRects(updateRegion);
 	}
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
 	fu->nRects = Swap16IfLE((uint16_t)(sraRgnCountRects(updateCopyRegion) +
 					   nUpdateRegionRects +
 					   !!sendCursorShape + !!sendCursorPos + !!sendKeyboardLedState +
-					   !!sendSupportedMessages + !!sendSupportedEncodings + !!sendServerIdentity));
+					   !!sendSupportedMessages + !!sendSupportedEncodings + !!sendServerIdentity + !!sendMLExtContextInformation));
+#else
+    fu->nRects = Swap16IfLE((uint16_t)(sraRgnCountRects(updateCopyRegion) +
+                   nUpdateRegionRects +
+                   !!sendCursorShape + !!sendCursorPos + !!sendKeyboardLedState +
+                   !!sendSupportedMessages + !!sendSupportedEncodings + !!sendServerIdentity));
+#endif
     } else {
 	fu->nRects = 0xFFFF;
     }
     cl->ublen = sz_rfbFramebufferUpdateMsg;
+
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
+    if (sendMLExtContextInformation) {
+        if (!rfbMLExtSendContextInformation(cl))
+            goto updateFailed;
+	}
+#endif
 
    if (sendCursorShape) {
 	cl->cursorWasChanged = FALSE;

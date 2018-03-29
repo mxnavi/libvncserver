@@ -1869,6 +1869,38 @@ typedef struct {
 } ML_EXT_MSG_PACKED rfbMLExt_FBAlternativeTextReq_t;
 
 /**
+ * Context Information Pseudo Encoding
+ */
+typedef struct {
+    /**
+     * Unique application identifier
+     * For application being adver-tised via UPnP, the unique application id MUST match the advertised appID.
+     * This field MAY be left empty (i.e. zero value).
+     *
+     */
+    uint32_t app_unique_id;
+    /* Trust Level for Application Category (see [22], Table 6-1) */
+    uint16_t app_category_trust_level;
+    /* Trust Level for Content Category (see [22], Table 6-1) */
+    uint16_t content_category_trust_level;
+    /* Application Category (see [22], Table 6-2) */
+    uint32_t app_category;
+    /* Content Category (see [22], Table 6-3) */
+    uint32_t content_category;
+    /** Content rules
+     *  which are followed to prevent Driver Distraction.
+     *  RuleIds are defined in [22], Table 6-5.
+     *  [0] '1'. Rule with ruleId 0 supported. '0' otherwise
+     *  [1] '1'. Rule with ruleId 1 supported. '0' otherwise
+     *  ...
+     *  [31] '1'. Rule with ruleId 31 supported. '0' otherwise
+     */
+    uint32_t content_rules_bits;
+} ML_EXT_MSG_PACKED rfbMLExt_ContextInformation_t;
+
+#define sz_rfbMLExtContextInformation 20
+
+/**
  * 6 A DDITIONAL ENCODINGS AND PSEUDOENCODINGS
  */
 /**
