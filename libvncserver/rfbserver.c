@@ -1129,7 +1129,9 @@ rfbBool
 rfbMLExtSendContextInformation(rfbClientPtr cl)
 {
     rfbFramebufferUpdateRectHeader rect;
-	rfbMLExt_ContextInformation_t  context_information;
+    rfbMLExt_ContextInformation_t context_information;
+    rfbMLExt_ContextInformation_t *ctx =
+        (rfbMLExt_ContextInformation_t *)cl->screen->screenData;
 
     if (cl->ublen + sz_rfbFramebufferUpdateRectHeader
                   + sz_rfbMLExtContextInformation> UPDATE_BUF_SIZE) {
@@ -1140,8 +1142,8 @@ rfbMLExtSendContextInformation(rfbClientPtr cl)
     rect.encoding = Swap32IfLE(rfbMLExt_PseudoEncoding_524);
     rect.r.x = 0;
     rect.r.y = 0;
-    rect.r.w = Swap16IfLE(800);
-    rect.r.h = Swap16IfLE(480);
+    rect.r.w = Swap16IfLE(cl->screen->width);
+    rect.r.h = Swap16IfLE(cl->screen->height);
 
     memcpy(&cl->updateBuf[cl->ublen], (char *)&rect,
         sz_rfbFramebufferUpdateRectHeader);
@@ -1149,18 +1151,27 @@ rfbMLExtSendContextInformation(rfbClientPtr cl)
 
     memset((char *)&context_information, 0, sz_rfbMLExtContextInformation);
 
-    context_information.app_unique_id = Swap32IfLE(0);
+    context_information.app_unique_id = Swap32IfLE(ctx->app_unique_id);
 
-    context_information.app_category_trust_level     = Swap16IfLE(0x0040);
-    context_information.content_category_trust_level = Swap16IfLE(0x0040);
+    context_information.app_category_trust_level     = Swap16IfLE(ctx->app_category_trust_level);
+    context_information.content_category_trust_level = Swap16IfLE(ctx->content_category_trust_level);
 
-    context_information.app_category     = Swap32IfLE(0x5);
-    context_information.content_category = Swap32IfLE(0x4);
+    context_information.app_category     = Swap32IfLE(ctx->app_category);
+    context_information.content_category = Swap32IfLE(ctx->content_category);
 
-    context_information.content_rules_bits = Swap32IfLE(0x1);
+    context_information.content_rules_bits = Swap32IfLE(ctx->content_rules_bits);
 
     memcpy(&cl->updateBuf[cl->ublen], (char *)&context_information, sz_rfbMLExtContextInformation);
     cl->ublen += sz_rfbMLExtContextInformation;
+
+    rfbLog("rfbMLExtSendContextInformation() cl: %p $dx%d app_unique_id:0x%x"
+            " trust level: 0x%02x 0x%02x"
+            " app_category: 0x%x content_category: 0x%x"
+            " content_rules_bits: 0x%x",
+            cl, cl->screen->width, cl->screen->height, ctx->app_unique_id,
+            ctx->app_category_trust_level, ctx->content_category_trust_level,
+            ctx->app_category, ctx->content_category,
+            ctx->content_rules_bits);
 
     rfbStatRecordEncodingSent(cl, rfbMLExt_PseudoEncoding_524,
         sz_rfbFramebufferUpdateRectHeader+sz_rfbMLExtContextInformation,
