@@ -1164,14 +1164,13 @@ rfbMLExtSendContextInformation(rfbClientPtr cl)
     memcpy(&cl->updateBuf[cl->ublen], (char *)&context_information, sz_rfbMLExtContextInformation);
     cl->ublen += sz_rfbMLExtContextInformation;
 
-    rfbLog("rfbMLExtSendContextInformation() cl: %p $dx%d app_unique_id:0x%x"
-            " trust level: 0x%02x 0x%02x"
-            " app_category: 0x%x content_category: 0x%x"
-            " content_rules_bits: 0x%x",
-            cl, cl->screen->width, cl->screen->height, ctx->app_unique_id,
-            ctx->app_category_trust_level, ctx->content_category_trust_level,
-            ctx->app_category, ctx->content_category,
-            ctx->content_rules_bits);
+    rfbLog("rfbMLExtSendContextInformation() cl: %p %dx%d app_unique_id: 0x%x"
+           " trust level: 0x%02x 0x%02x"
+           " app_category: 0x%x content_category: 0x%x"
+           " content_rules_bits: 0x%x",
+           cl, cl->screen->width, cl->screen->height, ctx->app_unique_id,
+           ctx->app_category_trust_level, ctx->content_category_trust_level,
+           ctx->app_category, ctx->content_category, ctx->content_rules_bits);
 
     rfbStatRecordEncodingSent(cl, rfbMLExt_PseudoEncoding_524,
         sz_rfbFramebufferUpdateRectHeader+sz_rfbMLExtContextInformation,
