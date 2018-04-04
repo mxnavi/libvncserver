@@ -638,7 +638,7 @@ rfbClientConnectionGone(rfbClientPtr cl)
 void
 rfbProcessClientMessage(rfbClientPtr cl)
 {
-    rfbLog("rfbProcessClientMessage() cl: %p state: %d", cl, cl->state);
+    // rfbLog("rfbProcessClientMessage() cl: %p state: %d", cl, cl->state);
     switch (cl->state) {
     case RFB_PROTOCOL_VERSION:
         rfbProcessClientProtocolVersion(cl);
@@ -2080,7 +2080,7 @@ rfbProcessClientNormalMessage(rfbClientPtr cl)
         return;
     }
 
-    rfbLog("rfbProcessClientNormalMessage() cl: %p %d", cl, msg.type);
+    // rfbLog("rfbProcessClientNormalMessage() cl: %p %d", cl, msg.type);
     switch (msg.type) {
 
     case rfbSetPixelFormat:
@@ -2791,7 +2791,7 @@ rfbSendFramebufferUpdate(rfbClientPtr cl,
 #endif
     rfbBool result = TRUE;
 
-    rfbLog("rfbSendFramebufferUpdate() cl: %p", cl);
+    // rfbLog("rfbSendFramebufferUpdate() cl: %p", cl);
 
     if(cl->screen->displayHook)
       cl->screen->displayHook(cl);
