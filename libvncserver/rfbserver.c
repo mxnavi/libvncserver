@@ -107,6 +107,10 @@
 #include <direct.h>
 #endif
 
+#ifdef __ANDROID__
+#include <cutils/atomic.h>
+#endif
+
 #ifdef LIBVNCSERVER_HAVE_LIBJPEG
 /*
  * Map of quality levels to provide compatibility with TightVNC/TigerVNC
@@ -129,18 +133,28 @@ static void rfbProcessClientInitMessage(rfbClientPtr cl);
 #ifdef LIBVNCSERVER_HAVE_LIBPTHREAD
 void rfbIncrClientRef(rfbClientPtr cl)
 {
+#ifdef __ANDROID__
+  android_atomic_inc(&cl->refCount);
+#else
   LOCK(cl->refCountMutex);
   cl->refCount++;
   UNLOCK(cl->refCountMutex);
+#endif
 }
 
 void rfbDecrClientRef(rfbClientPtr cl)
 {
+#ifdef __ANDROID__
+  int i = android_atomic_dec(&cl->refCount);
+  if (i <= 1 && cl->screen->backgroundLoop != FALSE)
+    TSIGNAL(cl->deleteCond);
+#else
   LOCK(cl->refCountMutex);
   cl->refCount--;
   if(cl->refCount<=0) /* just to be sure also < 0 */
     TSIGNAL(cl->deleteCond);
   UNLOCK(cl->refCountMutex);
+#endif
 }
 #else
 void rfbIncrClientRef(rfbClientPtr cl) {}
