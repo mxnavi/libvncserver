@@ -413,7 +413,9 @@ void rfbMarkRegionAsModified(rfbScreenInfoPtr screen,sraRegionPtr modRegion)
    while((cl=rfbClientIteratorNext(iterator))) {
      LOCK(cl->updateMutex);
      sraRgnOr(cl->modifiedRegion,modRegion);
+#ifndef LIBVNCSERVER_HAVE_ML_EXT
      TSIGNAL(cl->updateCond);
+#endif
      UNLOCK(cl->updateMutex);
    }
 
@@ -1193,6 +1195,7 @@ rfbBool rfbIsActive(rfbScreenInfoPtr screenInfo) {
 
 void rfbRunEventLoop(rfbScreenInfoPtr screen, long usec, rfbBool runInBackground)
 {
+#ifndef LIBVNCSERVER_HAVE_ML_EXT
   if(runInBackground) {
       rfbLog("create listener thread");
 #ifdef LIBVNCSERVER_HAVE_LIBPTHREAD
@@ -1207,6 +1210,7 @@ void rfbRunEventLoop(rfbScreenInfoPtr screen, long usec, rfbBool runInBackground
     return;
 #endif
   }
+#endif
 
   if(usec<0)
     usec=screen->deferUpdateTime*1000;

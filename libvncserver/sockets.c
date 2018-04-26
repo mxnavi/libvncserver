@@ -303,6 +303,7 @@ rfbCheckFds(rfbScreenInfoPtr rfbScreen,long usec)
 	tv.tv_usec = usec;
 	nfds = select(rfbScreen->maxFd + 1, &fds, NULL, NULL /* &fds */, &tv);
 	if (nfds == 0) {
+#ifndef LIBVNCSERVER_HAVE_ML_EXT
 	    /* timed out, check for async events */
             i = rfbGetClientIterator(rfbScreen);
             while((cl = rfbClientIteratorNext(i))) {
@@ -312,6 +313,7 @@ rfbCheckFds(rfbScreenInfoPtr rfbScreen,long usec)
                     rfbSendFileTransferChunk(cl);
             }
             rfbReleaseClientIterator(i);
+#endif
 	    return result;
 	}
 
