@@ -297,10 +297,16 @@ rfbCheckFds(rfbScreenInfoPtr rfbScreen,long usec)
 	rfbScreen->inetdInitDone = TRUE;
     }
 
-    do {
-	memcpy((char *)&fds, (char *)&(rfbScreen->allFds), sizeof(fd_set));
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
 	tv.tv_sec = 0;
 	tv.tv_usec = usec;
+    do {
+#else
+    do {
+	tv.tv_sec = 0;
+	tv.tv_usec = usec;
+#endif
+	memcpy((char *)&fds, (char *)&(rfbScreen->allFds), sizeof(fd_set));
 	nfds = select(rfbScreen->maxFd + 1, &fds, NULL, NULL /* &fds */, &tv);
 	if (nfds == 0) {
 #ifndef LIBVNCSERVER_HAVE_ML_EXT
