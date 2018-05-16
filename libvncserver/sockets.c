@@ -77,6 +77,11 @@
 #include "rfbssl.h"
 #endif
 
+#if defined(__ANDROID__) && defined(LIBVNCSERVER_HAVE_ML_EXT)
+#include <cutils/properties.h>
+#include <linux/if.h>
+#endif
+
 #if defined(__linux__) && defined(NEED_TIMEVAL)
 struct timeval 
 {
@@ -450,6 +455,20 @@ rfbProcessNewConnection(rfbScreenInfoPtr rfbScreen)
       closesocket(sock);
       return FALSE;
     }
+
+#if defined(__ANDROID__) && defined(LIBVNCSERVER_HAVE_ML_EXT)
+    char v[PROPERTY_VALUE_MAX];
+    property_get("ml.interface", v, "");
+    if (v[0] != '\0') {
+        struct ifreq ifr;
+        memset(&ifr, 0, sizeof(ifr));
+        snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), "%s", v);
+        if (setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, (void *)&ifr,
+                       sizeof(ifr)) < 0) {
+            rfbLogPerror("SO_BINDTODEVICE failed");
+        }
+    }
+#endif
 
     if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY,
 		   (char *)&one, sizeof(one)) < 0) {
@@ -880,6 +899,21 @@ rfbListenOnTCPPort(int port,
 	closesocket(sock);
 	return -1;
     }
+
+#if defined(__ANDROID__) && defined(LIBVNCSERVER_HAVE_ML_EXT)
+    char v[PROPERTY_VALUE_MAX];
+    property_get("ml.interface", v, "");
+    if (v[0] != '\0') {
+        struct ifreq ifr;
+        memset(&ifr, 0, sizeof(ifr));
+        snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), "%s", v);
+        if (setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, (void *)&ifr,
+                       sizeof(ifr)) < 0) {
+            rfbLogPerror("SO_BINDTODEVICE failed");
+        }
+    }
+#endif
+
     if (bind(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
 	closesocket(sock);
 	return -1;
