@@ -452,6 +452,7 @@ typedef struct {
 #define rfbEncodingZYWRLE 17
 
 #define rfbEncodingH264               0x48323634
+#define rfbEncodingRLE         0XFFFFFDF3
 
 /* Cache & XOR-Zlib - rdv@2002 */
 #define rfbEncodingCache                 0xFFFF0000
