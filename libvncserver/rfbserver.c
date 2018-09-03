@@ -1010,7 +1010,7 @@ rfbSendSupportedEncodings(rfbClientPtr cl)
 {
     rfbFramebufferUpdateRectHeader rect;
     static uint32_t supported[] = {
-	rfbEncodingRLE,
+	rfbMLExt_Encoding_525,
         rfbEncodingRaw,
 	rfbEncodingCopyRect,
 	rfbEncodingRRE,
@@ -2226,7 +2226,7 @@ rfbProcessClientNormalMessage(rfbClientPtr cl)
 #ifdef LIBVNCSERVER_HAVE_LIBPNG
 	    case rfbEncodingTightPng:
 #endif
-	    case rfbEncodingRLE:
+	    case rfbMLExt_Encoding_525:
             /* The first supported encoding is the 'preferred' encoding */
                 if (cl->preferredEncoding == -1)
                     cl->preferredEncoding = enc;
@@ -3255,8 +3255,8 @@ rfbSendFramebufferUpdate(rfbClientPtr cl,
 	    break;
 #endif
 #endif
-	case rfbEncodingRLE:
-	    if(!rfbSendRectEncodingRLE(cl, x, y, w, h))
+	case rfbMLExt_Encoding_525:
+	    if(!rfbSendRectEncodingScanLineRLE(cl, x, y, w, h))
 		 goto updateFailed;
 		break;
         }
@@ -3707,7 +3707,50 @@ rfbProcessUDPInput(rfbScreenInfoPtr rfbScreen)
     }
 }
 
-rfbBool rfbSendRectEncodingRLE(rfbClientPtr cl, int x,int y,int w,int h)
+rfbBool scanLineRLESplit(char* pBuffer,int nCount,int nRunMax,uint16_t* puMRuns,int k,uint32_t cv )
+{
+	rfbErr("------------------wang-l scanLineRLESplit  begin------------");   
+	uint16_t uMRuns = *puMRuns;
+	if(nCount >= nRunMax)
+	{
+	       int nTotalSplitRun = nCount /nRunMax;
+		int m = 0;
+		for(m = 0;m < nTotalSplitRun;m++)
+		{
+		       if(0 != m)
+		       {
+		       	uMRuns++;
+		       }
+			int nTempCount = nRunMax - 1;
+			memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&cv,k -1);
+			memcpy(pBuffer + uMRuns * k - 1 + 2,(char*)&nTempCount,1);
+                     uint16_t uMRunsR = Swap16IfLE(uMRuns);
+			memcpy(pBuffer,(char*)&uMRunsR,2);
+		}
+		if((nCount % nRunMax) >0)
+		{
+		      uMRuns++;
+			int nTempCount = nCount % nRunMax - 1;
+			memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&cv,k -1);
+			memcpy(pBuffer + uMRuns * k - 1 + 2,(char*)&nTempCount,1);
+		       uint16_t uMRunsR = Swap16IfLE(uMRuns);
+			memcpy(pBuffer,(char*)&uMRunsR,2);
+		}
+	}
+	else if((nCount % nRunMax) >0)
+       {
+       	int nTempCount = nCount % nRunMax - 1;
+		memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&cv,k -1);
+		memcpy(pBuffer + uMRuns * k - 1 + 2,(char*)&nTempCount,1);
+	       uint16_t uMRunsR = Swap16IfLE(uMRuns);
+		memcpy(pBuffer,(char*)&uMRunsR,2);	
+       }
+	*puMRuns = uMRuns;
+	rfbErr("------------------wang-l scanLineRLESplit  end------------"); 
+	return TRUE;
+
+}
+rfbBool rfbSendRectEncodingScanLineRLE(rfbClientPtr cl, int x,int y,int w,int h)
 {      
     rfbFramebufferUpdateRectHeader rect;
     int nlines;
@@ -3723,7 +3766,7 @@ rfbBool rfbSendRectEncodingRLE(rfbClientPtr cl, int x,int y,int w,int h)
     rect.r.y = Swap16IfLE(y);
     rect.r.w = Swap16IfLE(w);
     rect.r.h = Swap16IfLE(h);
-    rect.encoding = Swap32IfLE(rfbEncodingRLE);
+    rect.encoding = Swap32IfLE(rfbMLExt_Encoding_525);
     memcpy(&cl->updateBuf[cl->ublen], (char *)&rect,sz_rfbFramebufferUpdateRectHeader);
     cl->ublen += sz_rfbFramebufferUpdateRectHeader;
 
@@ -3749,7 +3792,6 @@ rfbBool rfbSendRectEncodingRLE(rfbClientPtr cl, int x,int y,int w,int h)
    int k = (r + cl->format.depth) / 8;
    int clientColorDepth = cl->format.depth;
     int nRunMax = 1 << r;
-    uint32_t nRunSplitMask = 0xffffffff<<r;
      char* pBuffer = (char*)malloc(w * (k + 2));    
    int i = 0;
    for(i = 0;i < h;i++)
@@ -3776,12 +3818,9 @@ rfbBool rfbSendRectEncodingRLE(rfbClientPtr cl, int x,int y,int w,int h)
 	uint16_t nCount = 0;
 	uint32_t cv;
         rfbBool bFlag = FALSE;
-	int nTotal = 0;
         int j = 0;
 	for(j=0; j < w;j++)
 	{
-	              uint32_t kValue = 0;
-			//uint32_t cvTemp = *(uint32_t*)(pClientBuffer + j *  nBytesPerPixel);
 			uint32_t cvTemp = *(uint32_t*)(pClientBuffer + j *  nBytesPerPixel);
 			cvTemp &= ~(~0U << clientColorDepth);
 			if(bFlag)
@@ -3793,112 +3832,16 @@ rfbBool rfbSendRectEncodingRLE(rfbClientPtr cl, int x,int y,int w,int h)
 					{
 						nCount++;
 						//TODO split
-						if((nCount & nRunSplitMask) > 0)
-						{
-						       int nTotalSplitRun = nCount /nRunMax;
-							int m = 0;
-							for(m = 0;m < nTotalSplitRun;m++)
-							{
-							       if(0 != m)
-							       {
-							       	uMRuns++;
-							       }
-								int nTempCount = nRunMax - 1;
-								nTotal += nTempCount;
-								//kValue = cv;
-								//kValue +=  nTempCount << clientColorDepth;
-								//memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&kValue,k);
-								memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&cv,k -1);
-								memcpy(pBuffer + uMRuns * k - 1 + 2,(char*)&nTempCount,1);
-		                                          uMRunsR = Swap16IfLE(uMRuns);
-								memcpy(pBuffer,(char*)&uMRunsR,2);
-							}
-						       if((nCount % nRunMax) >0)
-						       {
-						       	int nTempCount = nCount % nRunMax - 1;
-						       	uMRuns++;
-								nTotal += nTempCount;
-								//kValue = cv;
-								//kValue +=  nTempCount << clientColorDepth;
-								//memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&kValue,k);
-								memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&cv,k -1);
-								memcpy(pBuffer + uMRuns * k - 1 + 2,(char*)&nTempCount,1);
-		                                          uMRunsR = Swap16IfLE(uMRuns);
-								memcpy(pBuffer,(char*)&uMRunsR,2);
-						       }
-						}
-						else
-						{
-						       nTotal += nCount;
-							   int nTempCount = nCount - 1;
-							kValue = cv;
-							kValue +=  nTempCount << clientColorDepth;
-							//memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&kValue,k);
-							memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&cv,k -1);
-							memcpy(pBuffer + uMRuns * k - 1 + 2,(char*)&nTempCount,1);
-	                                          uMRunsR = Swap16IfLE(uMRuns);
-							memcpy(pBuffer,(char*)&uMRunsR,2);
-						}
+						scanLineRLESplit(pBuffer,nCount,nRunMax,&uMRuns,k,cv);
 						nBufferLength = uMRuns * k + 2;
 					}
 					else
 					{
 					       //TODO split
-						if((nCount & nRunSplitMask) > 0)
-						{
-						       int nTotalSplitRun = nCount /nRunMax; ;
-							int m = 0;
-							for(m = 0;m < nTotalSplitRun;m++)
-							{
-								if(0 != m)
-							       {
-							       	uMRuns++;
-							       }
-								int nTempCount = nRunMax - 1;
-								nTotal += nTempCount;
-								//kValue = cv;
-							     // kValue +=  nTempCount << clientColorDepth;
-							      // memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&kValue,k);
-								memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&cv,k -1);
-								memcpy(pBuffer + uMRuns * k - 1 + 2,(char*)&nTempCount,1);
-		                                          uMRunsR = Swap16IfLE(uMRuns);
-								memcpy(pBuffer,(char*)&uMRunsR,2);
-							}
-						       if((nCount % nRunMax) >0)
-						       {
-						       	int nTempCount = nCount % nRunMax - 1;
-						       	uMRuns++;
-								nTotal += nTempCount;
-								//kValue = cv;
-							      //kValue +=  nTempCount << clientColorDepth;
-							       //memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&kValue,k);
-						       	memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&cv,k -1);
-								memcpy(pBuffer + uMRuns * k - 1 + 2,(char*)&nTempCount,1);
-		                                          uMRunsR = Swap16IfLE(uMRuns);
-								memcpy(pBuffer,(char*)&uMRunsR,2);
-						       }
-						}
-						else
-						{
-						       nTotal += nCount;
-							int nTempCount = nCount - 1;
-							memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&cv,k -1);
-							memcpy(pBuffer + uMRuns * k - 1 + 2,(char*)&nTempCount,1);
-							//kValue = cv;
-						      // kValue +=  nTempCount << clientColorDepth;
-						       //memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&kValue,k);
-	                                          uMRunsR = Swap16IfLE(uMRuns);
-							memcpy(pBuffer,(char*)&uMRunsR,2);
-						}
-
-						
+						scanLineRLESplit(pBuffer,nCount,nRunMax,&uMRuns,k,cv);						
 						nCount = 1;
 						uMRuns++;
-						nTotal += nCount;
 						int nTempCount  = 0 ;
-						//kValue = cvTemp;
-						//kValue +=  nTempCount << clientColorDepth;
-						//memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&kValue,k);
 						memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&cvTemp,k -1);
 						memcpy(pBuffer + uMRuns * k - 1 + 2,&nTempCount,1);
                                           uMRunsR = Swap16IfLE(uMRuns);
@@ -3933,54 +3876,7 @@ rfbBool rfbSendRectEncodingRLE(rfbClientPtr cl, int x,int y,int w,int h)
 					else
 					{
 					      //todo split
-						if((nCount & nRunSplitMask) > 0)
-						{
-						       int nTotalSplitRun = nCount /nRunMax; ;
-							int m = 0;
-							for(m = 0;m < nTotalSplitRun;m++)
-							{
-								if(0 != m)
-							       {
-							       	uMRuns++;
-							       }
-								int nTempCount  = nRunMax - 1;
-								nTotal += nTempCount;
-								//kValue = cv;
-						               //kValue +=  nTempCount << clientColorDepth;
-						               //memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&kValue,k);
-								memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&cv,k -1);
-								memcpy(pBuffer + uMRuns * k - 1 + 2,(char*)&nTempCount,1);
-		                                          uMRunsR = Swap16IfLE(uMRuns);
-								memcpy(pBuffer,(char*)&uMRunsR,2);
-							}
-						       if((nCount % nRunMax) >0)
-						       {
-						       	int nTempCount  = nCount % nRunMax - 1;
-						       	uMRuns++;
-								nTotal += nTempCount;
-								//kValue = cv;
-						              //kValue +=  nTempCount << clientColorDepth;
-						              //memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&kValue,k);
-						       	memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&cv,k -1);
-								memcpy(pBuffer + uMRuns * k - 1 + 2,(char*)&nTempCount,1);
-		                                          uMRunsR = Swap16IfLE(uMRuns);
-								memcpy(pBuffer,(char*)&uMRunsR,2);
-						       }
-						}
-						else
-						{
-						       nTotal += nCount;
-							int nTempCount = nCount - 1;
-							//kValue = cv;
-						       //kValue +=  nTempCount << clientColorDepth;
-						        //memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&kValue,k);
-							memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&cv,k -1);
-							memcpy(pBuffer + uMRuns * k - 1 + 2,(char*)&nTempCount,1);
-	                                          uMRunsR = Swap16IfLE(uMRuns);
-							memcpy(pBuffer,(char*)&uMRunsR,2);
-						}
-
-						
+						scanLineRLESplit(pBuffer,nCount,nRunMax,&uMRuns,k,cv);						
 						nCount = 1;
 						uMRuns++;
 						cv = cvTemp;

@@ -866,7 +866,7 @@ extern rfbBool rfbSendRectEncodingHextile(rfbClientPtr cl, int x, int y, int w,
 
 extern rfbBool rfbSendRectEncodingUltra(rfbClientPtr cl, int x,int y,int w,int h);
 
-extern rfbBool rfbSendRectEncodingRLE(rfbClientPtr cl, int x,int y,int w,int h);
+extern rfbBool rfbSendRectEncodingScanLineRLE(rfbClientPtr cl, int x,int y,int w,int h);
 
 #ifdef LIBVNCSERVER_HAVE_LIBZ
 /* zlib.c */
