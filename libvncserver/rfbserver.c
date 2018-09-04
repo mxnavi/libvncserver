@@ -3709,7 +3709,6 @@ rfbProcessUDPInput(rfbScreenInfoPtr rfbScreen)
 
 rfbBool scanLineRLESplit(char* pBuffer,int nCount,int nRunMax,uint16_t* puMRuns,int k,uint32_t cv )
 {
-	rfbErr("------------------wang-l scanLineRLESplit  begin------------");   
 	uint16_t uMRuns = *puMRuns;
 	if(nCount >= nRunMax)
 	{
@@ -3746,7 +3745,6 @@ rfbBool scanLineRLESplit(char* pBuffer,int nCount,int nRunMax,uint16_t* puMRuns,
 		memcpy(pBuffer,(char*)&uMRunsR,2);	
        }
 	*puMRuns = uMRuns;
-	rfbErr("------------------wang-l scanLineRLESplit  end------------"); 
 	return TRUE;
 
 }
