@@ -3722,208 +3722,171 @@ rfbProcessUDPInput(rfbScreenInfoPtr rfbScreen)
 static rfbBool scanLineRLESplit(char* pBuffer,int nCount,int nRunMax,uint16_t* puMRuns,int k,uint32_t cv )
 {
 	uint16_t uMRuns = *puMRuns;
-	if(nCount >= nRunMax)
-	{
-	       int nTotalSplitRun = nCount /nRunMax;
+	if (nCount >= nRunMax) {
+		int nTotalSplitRun = nCount / nRunMax;
 		int m = 0;
-		for(m = 0;m < nTotalSplitRun;m++)
-		{
-		       if(0 != m)
-		       {
-		       	uMRuns++;
-		       }
+		for (m = 0; m < nTotalSplitRun; m++) {
+			if (0 != m) {
+				uMRuns++;
+			}
 			int nTempCount = nRunMax - 1;
-			memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&cv,k -1);
-			memcpy(pBuffer + uMRuns * k - 1 + 2,(char*)&nTempCount,1);
-                     uint16_t uMRunsR = Swap16IfLE(uMRuns);
-			memcpy(pBuffer,(char*)&uMRunsR,2);
+			memcpy(pBuffer + (uMRuns - 1) * k + 2, (char*) &cv, k - 1);
+			memcpy(pBuffer + uMRuns * k - 1 + 2, (char*) &nTempCount, 1);
+			uint16_t uMRunsR = Swap16IfLE(uMRuns);
+			memcpy(pBuffer, (char*) &uMRunsR, 2);
 		}
-		if((nCount % nRunMax) >0)
-		{
-		      uMRuns++;
+		if ((nCount % nRunMax) > 0) {
+			uMRuns++;
 			int nTempCount = nCount % nRunMax - 1;
-			memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&cv,k -1);
-			memcpy(pBuffer + uMRuns * k - 1 + 2,(char*)&nTempCount,1);
-		       uint16_t uMRunsR = Swap16IfLE(uMRuns);
-			memcpy(pBuffer,(char*)&uMRunsR,2);
+			memcpy(pBuffer + (uMRuns - 1) * k + 2, (char*) &cv, k - 1);
+			memcpy(pBuffer + uMRuns * k - 1 + 2, (char*) &nTempCount, 1);
+			uint16_t uMRunsR = Swap16IfLE(uMRuns);
+			memcpy(pBuffer, (char*) &uMRunsR, 2);
 		}
+	} else if ((nCount % nRunMax) > 0) {
+		int nTempCount = nCount % nRunMax - 1;
+		memcpy(pBuffer + (uMRuns - 1) * k + 2, (char*) &cv, k - 1);
+		memcpy(pBuffer + uMRuns * k - 1 + 2, (char*) &nTempCount, 1);
+		uint16_t uMRunsR = Swap16IfLE(uMRuns);
+		memcpy(pBuffer, (char*) &uMRunsR, 2);
 	}
-	else if((nCount % nRunMax) >0)
-       {
-       	int nTempCount = nCount % nRunMax - 1;
-		memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&cv,k -1);
-		memcpy(pBuffer + uMRuns * k - 1 + 2,(char*)&nTempCount,1);
-	       uint16_t uMRunsR = Swap16IfLE(uMRuns);
-		memcpy(pBuffer,(char*)&uMRunsR,2);	
-       }
 	*puMRuns = uMRuns;
 	return TRUE;
-
 }
 
 rfbBool rfbSendRectEncodingScanLineRLE(rfbClientPtr cl, int x,int y,int w,int h)
 {      
-    rfbFramebufferUpdateRectHeader rect;
-    int nlines;
-    int bytesPerLine = w * (cl->format.bitsPerPixel / 8);
+	rfbFramebufferUpdateRectHeader rect;
+	int nlines;
+	int bytesPerLine = w * (cl->format.bitsPerPixel / 8);
 
-    /* Flush the buffer to guarantee correct alignment for translateFn(). */
-    if (cl->ublen > 0) {
-        if (!rfbSendUpdateBuf(cl))
-            return FALSE;
-    }
-
-    rect.r.x = Swap16IfLE(x);
-    rect.r.y = Swap16IfLE(y);
-    rect.r.w = Swap16IfLE(w);
-    rect.r.h = Swap16IfLE(h);
-    rect.encoding = Swap32IfLE(rfbMLExt_Encoding_525);
-    memcpy(&cl->updateBuf[cl->ublen], (char *)&rect,sz_rfbFramebufferUpdateRectHeader);
-    cl->ublen += sz_rfbFramebufferUpdateRectHeader;
-
-
-    rfbStatRecordEncodingSent(cl, rfbEncodingRaw, sz_rfbFramebufferUpdateRectHeader + bytesPerLine * h,
-        sz_rfbFramebufferUpdateRectHeader + bytesPerLine * h);
-
-   
-   int nBytesPerPixel = cl->format.bitsPerPixel / 8; 
-   
-   int bytesPerOutputLine = w * (cl->format.bitsPerPixel/8);
-   char* pClientBuffer = (char*)malloc(bytesPerOutputLine); 
-   int cm = cl->format.depth % 8;
-   int r;
-   if(cm <= 4)
-   {
-   	r = 8 - cm;
-   }
-   else
-   {
-   	r = 16 - cm;
-   }
-   int k = (r + cl->format.depth) / 8;
-   int clientColorDepth = cl->format.depth;
-    int nRunMax = 1 << r;
-     char* pBuffer = (char*)malloc(w * (k + 2));    
-   int i = 0;
-   for(i = 0;i < h;i++)
-   {
-       memset(pClientBuffer,0,bytesPerOutputLine);
-   	memset(pBuffer,0,w * (k + 2));
-	int nBufferLength = 0;
-        uint16_t uMRunsR = 0;
-   	uint16_t uMRuns = 0;
-       char *fbptr = (cl->scaledScreen->frameBuffer + (cl->scaledScreen->paddedWidthInBytes * (y + i))
-               + (x * (cl->scaledScreen->bitsPerPixel / 8)));
-        if(cl->translateFn)
-        {
-       (*cl->translateFn)(cl->translateLookupTable,
-		   &(cl->screen->serverFormat),
-                       &cl->format, fbptr, pClientBuffer,
-                       cl->scaledScreen->paddedWidthInBytes, w, 1);            
-        }
-	else
-	{
-	      	rfbErr("------------------wang-l cl->translateFn  = NULL------------");   
+	/* Flush the buffer to guarantee correct alignment for translateFn(). */
+	if (cl->ublen > 0) {
+		if (!rfbSendUpdateBuf(cl))
+			return FALSE;
 	}
-	
-	uint16_t nCount = 0;
-	uint32_t cv;
-        rfbBool bFlag = FALSE;
-        int j = 0;
-	for(j=0; j < w;j++)
-	{
-			uint32_t cvTemp = *(uint32_t*)(pClientBuffer + j *  nBytesPerPixel);
-			cvTemp &= ~(~0U << clientColorDepth);
-			if(bFlag)
-			{
 
-				if(j == (w - 1))
-				{
-					if(cv == cvTemp)
-					{
+	rect.r.x = Swap16IfLE(x);
+	rect.r.y = Swap16IfLE(y);
+	rect.r.w = Swap16IfLE(w);
+	rect.r.h = Swap16IfLE(h);
+	rect.encoding = Swap32IfLE(rfbMLExt_Encoding_525);
+	memcpy(&cl->updateBuf[cl->ublen], (char *) &rect,
+			sz_rfbFramebufferUpdateRectHeader);
+	cl->ublen += sz_rfbFramebufferUpdateRectHeader;
+
+	rfbStatRecordEncodingSent(cl, rfbEncodingRaw,
+			sz_rfbFramebufferUpdateRectHeader + bytesPerLine * h,
+			sz_rfbFramebufferUpdateRectHeader + bytesPerLine * h);
+
+	int nBytesPerPixel = cl->format.bitsPerPixel / 8;
+
+	int bytesPerOutputLine = w * (cl->format.bitsPerPixel / 8);
+	char* pClientBuffer = (char*) alloca(bytesPerOutputLine);
+	int cm = cl->format.depth % 8;
+	int r;
+	if (cm <= 4) {
+		r = 8 - cm;
+	} else {
+		r = 16 - cm;
+	}
+	int k = (r + cl->format.depth) / 8;
+	int clientColorDepth = cl->format.depth;
+	int nRunMax = 1 << r;
+	char* pBuffer = (char*) alloca(w * (k + 2));
+	int i = 0;
+	for (i = 0; i < h; i++) {
+		int nBufferLength = 0;
+		uint16_t uMRunsR = 0;
+		uint16_t uMRuns = 0;
+		char *fbptr = (cl->scaledScreen->frameBuffer
+				+ (cl->scaledScreen->paddedWidthInBytes * (y + i))
+				+ (x * (cl->scaledScreen->bitsPerPixel / 8)));
+		if (cl->translateFn) {
+			(*cl->translateFn)(cl->translateLookupTable,
+					&(cl->screen->serverFormat), &cl->format, fbptr,
+					pClientBuffer, cl->scaledScreen->paddedWidthInBytes, w, 1);
+		} else {
+			rfbErr(
+					"------------------wang-l cl->translateFn  = NULL------------");
+		}
+		uint16_t nCount = 0;
+		uint32_t cv;
+		rfbBool bFlag = FALSE;
+		int j = 0;
+		for (j = 0; j < w; j++) {
+			uint32_t cvTemp = *(uint32_t*) (pClientBuffer + j * nBytesPerPixel);
+			cvTemp &= ~(~0U << clientColorDepth);
+			if (bFlag) {
+
+				if (j == (w - 1)) {
+					if (cv == cvTemp) {
 						nCount++;
 						//TODO split
-						scanLineRLESplit(pBuffer,nCount,nRunMax,&uMRuns,k,cv);
+						scanLineRLESplit(pBuffer, nCount, nRunMax, &uMRuns, k,
+								cv);
 						nBufferLength = uMRuns * k + 2;
-					}
-					else
-					{
-					       //TODO split
-						scanLineRLESplit(pBuffer,nCount,nRunMax,&uMRuns,k,cv);						
+					} else {
+						//TODO split
+						scanLineRLESplit(pBuffer, nCount, nRunMax, &uMRuns, k,
+								cv);
 						nCount = 1;
 						uMRuns++;
-						int nTempCount  = 0 ;
-						memcpy(pBuffer + (uMRuns - 1) * k  + 2,(char*)&cvTemp,k -1);
-						memcpy(pBuffer + uMRuns * k - 1 + 2,&nTempCount,1);
-                                          uMRunsR = Swap16IfLE(uMRuns);
-						memcpy(pBuffer,(char*)&uMRunsR,2);
+						int nTempCount = 0;
+						memcpy(pBuffer + (uMRuns - 1) * k + 2, (char*) &cvTemp,
+								k - 1);
+						memcpy(pBuffer + uMRuns * k - 1 + 2, &nTempCount, 1);
+						uMRunsR = Swap16IfLE(uMRuns);
+						memcpy(pBuffer, (char*) &uMRunsR, 2);
 						nBufferLength = uMRuns * k + 2;
-	
-					}
-					if(cl->ublen + nBufferLength < UPDATE_BUF_SIZE)
-						{
-							memcpy(&cl->updateBuf[cl->ublen], (char *)pBuffer,nBufferLength);
-							cl->ublen = cl->ublen + nBufferLength;
-						}
-						else
-						{
 
-						     if (!rfbSendUpdateBuf(cl))
-						     	{
-                  						  free(pClientBuffer);
-								  free(pBuffer);     		
-						     		return FALSE;	
-						     	}
-						     memcpy(&cl->updateBuf[cl->ublen], (char *)pBuffer,nBufferLength);
-						     cl->ublen = cl->ublen + nBufferLength;
-						}
-				}
-				else
-				{
-					if(cv == cvTemp)
-					{
-						nCount++;	
 					}
-					else
-					{
-					      //todo split
-						scanLineRLESplit(pBuffer,nCount,nRunMax,&uMRuns,k,cv);						
+					if (cl->ublen + nBufferLength < UPDATE_BUF_SIZE) {
+						memcpy(&cl->updateBuf[cl->ublen], (char *) pBuffer,
+								nBufferLength);
+						cl->ublen = cl->ublen + nBufferLength;
+					} else {
+
+						if (!rfbSendUpdateBuf(cl)) {
+							return FALSE;
+						}
+						memcpy(&cl->updateBuf[cl->ublen], (char *) pBuffer,
+								nBufferLength);
+						cl->ublen = cl->ublen + nBufferLength;
+					}
+				} else {
+					if (cv == cvTemp) {
+						nCount++;
+					} else {
+						//todo split
+						scanLineRLESplit(pBuffer, nCount, nRunMax, &uMRuns, k,
+								cv);
 						nCount = 1;
 						uMRuns++;
 						cv = cvTemp;
-                                          uMRunsR = Swap16IfLE(uMRuns);
-						memcpy(pBuffer,(char*)&uMRunsR,2);
+						uMRunsR = Swap16IfLE(uMRuns);
+						memcpy(pBuffer, (char*) &uMRunsR, 2);
 						nBufferLength = uMRuns * k + 2;
 					}
 				}
-			}
-			else
-			{
-			       nCount = 1;
+			} else {
+				nCount = 1;
 				uMRuns = 1;
 				cv = cvTemp;
-                                uMRunsR = Swap16IfLE(uMRuns);
-				memcpy(pBuffer,(char*)&uMRunsR,2);
+				uMRunsR = Swap16IfLE(uMRuns);
+				memcpy(pBuffer, (char*) &uMRunsR, 2);
 				bFlag = TRUE;
 				nBufferLength = 2;
 			}
-			
-				
+
 		}
-
 	}
-    free(pClientBuffer);
-   free(pBuffer);
-   if(cl->ublen > 0)
-   {
-
-							 if (!rfbSendUpdateBuf(cl))
-						     	{
-		
-						     		return FALSE;
-                                                  }	
-   }
-   return TRUE;       
+	if (cl->ublen > 0) {
+		if (!rfbSendUpdateBuf(cl)) {
+			return FALSE;
+		}
+	}
+	return TRUE;
    }
 #endif
 
