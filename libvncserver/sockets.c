@@ -1121,3 +1121,23 @@ rfbSetNonBlocking(int sock)
   }
   return TRUE;
 }
+
+rfbBool rfbCheckMLExtEncoding525(int sock)
+{
+    int rc;
+    int mss;
+    socklen_t len;
+
+    len = sizeof(mss);
+    rc = getsockopt(sock, IPPROTO_TCP, TCP_MAXSEG, &mss, &len);
+    if (rc < 0) {
+        rfbLogPerror("TCP_MAXSEG with getsockopt failed");
+        return TRUE;
+    }
+    // CNS2.0 head unit
+    if (mss == (9000 /* MTU */ - 20 - 20)) {
+        return FALSE;
+    }
+    return TRUE;
+}
+ 

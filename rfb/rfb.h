@@ -627,6 +627,7 @@ typedef struct _rfbClientRec {
     rfbBool enableCursorPosUpdates;   /**< client supports cursor position updates */
 #ifdef LIBVNCSERVER_HAVE_ML_EXT
     rfbBool enableMLExtContextInformation; /**< client supports context information encoding for mirrorlink */
+    rfbBool enableMLExtEncoding525;
 #endif
     rfbBool useRichCursorEncoding;    /**< rfbEncodingRichCursor is preferred */
     rfbBool cursorWasChanged;         /**< cursor shape update should be sent */
@@ -760,6 +761,8 @@ extern int rfbListenOnTCP6Port(int port, const char* iface);
 extern int rfbListenOnUDPPort(int port, in_addr_t iface);
 extern int rfbStringToAddr(char* string,in_addr_t* addr);
 extern rfbBool rfbSetNonBlocking(int sock);
+extern rfbBool rfbCheckMLExtEncoding525(int sock);
+
 
 #ifdef LIBVNCSERVER_WITH_WEBSOCKETS
 /* websockets.c */

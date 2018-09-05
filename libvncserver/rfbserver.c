@@ -453,6 +453,7 @@ rfbNewTCPOrUDPClient(rfbScreenInfoPtr rfbScreen,
       cl->enableServerIdentity = FALSE;
 #ifdef LIBVNCSERVER_HAVE_ML_EXT
       cl->enableMLExtContextInformation = FALSE;
+      cl->enableMLExtEncoding525 = rfbCheckMLExtEncoding525(sock);
 #endif
       cl->lastKeyboardLedState = -1;
       cl->cursorX = rfbScreen->cursorX;
@@ -2233,6 +2234,9 @@ rfbProcessClientNormalMessage(rfbClientPtr cl)
 #endif
             /* The first supported encoding is the 'preferred' encoding */
                 if (cl->preferredEncoding == -1)
+#ifdef LIBVNCSERVER_HAVE_ML_EXT_ENCODING525
+                    if (cl->enableMLExtEncoding525 || enc != rfbMLExt_Encoding_525)
+#endif
                     cl->preferredEncoding = enc;
 
 
