@@ -25,7 +25,7 @@
 #define LIBVNCSERVER_HAVE_ML_EXT 1
 #endif
 
-/* #define LIBVNCSERVER_HAVE_ML_EXT_ENCODING525 1 */
+ #define LIBVNCSERVER_HAVE_ML_EXT_ENCODING525 1
 
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 #ifndef LIBVNCSERVER_HAVE_ARPA_INET_H 

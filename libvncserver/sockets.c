@@ -1125,17 +1125,23 @@ rfbSetNonBlocking(int sock)
 rfbBool rfbCheckMLExtEncoding525(int sock)
 {
     int rc;
-    int mss;
+    struct tcp_info tcp_info;
     socklen_t len;
 
-    len = sizeof(mss);
-    rc = getsockopt(sock, IPPROTO_TCP, TCP_MAXSEG, &mss, &len);
+    len = sizeof(tcp_info);
+    rc = getsockopt(sock, IPPROTO_TCP, TCP_INFO, &tcp_info, &len);
     if (rc < 0) {
-        rfbLogPerror("TCP_MAXSEG with getsockopt failed");
+        rfbLogPerror("TCP_INFO getsockopt failed");
         return TRUE;
     }
+
+#if 0
+    rfbErr("tcpi_snd_mss: %u tcpi_rcv_mss: %u tcpi_advmss: %u tcpi_snd_cwnd: %u",
+       tcp_info.tcpi_snd_mss, tcp_info.tcpi_rcv_mss, tcp_info.tcpi_advmss, tcp_info.tcpi_snd_cwnd);
+#endif
     // CNS2.0 head unit
-    if (mss == (9000 /* MTU */ - 20 - 20)) {
+    if (tcp_info.tcpi_snd_mss == tcp_info.tcpi_advmss) {
+        rfbErr("Encoding-525 false");
         return FALSE;
     }
     return TRUE;
