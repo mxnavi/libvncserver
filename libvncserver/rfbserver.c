@@ -1010,8 +1010,10 @@ rfbSendSupportedEncodings(rfbClientPtr cl)
 {
     rfbFramebufferUpdateRectHeader rect;
     static uint32_t supported[] = {
+#ifdef LIBVNCSERVER_HAVE_ML_EXT_ENCODING525
 	rfbMLExt_Encoding_525,
-        rfbEncodingRaw,
+#endif
+	rfbEncodingRaw,
 	rfbEncodingCopyRect,
 	rfbEncodingRRE,
 	rfbEncodingCoRRE,
@@ -2226,7 +2228,9 @@ rfbProcessClientNormalMessage(rfbClientPtr cl)
 #ifdef LIBVNCSERVER_HAVE_LIBPNG
 	    case rfbEncodingTightPng:
 #endif
+#ifdef LIBVNCSERVER_HAVE_ML_EXT_ENCODING525
 	    case rfbMLExt_Encoding_525:
+#endif
             /* The first supported encoding is the 'preferred' encoding */
                 if (cl->preferredEncoding == -1)
                     cl->preferredEncoding = enc;
@@ -3255,10 +3259,13 @@ rfbSendFramebufferUpdate(rfbClientPtr cl,
 	    break;
 #endif
 #endif
+
+#ifdef LIBVNCSERVER_HAVE_ML_EXT_ENCODING525
 	case rfbMLExt_Encoding_525:
 	    if(!rfbSendRectEncodingScanLineRLE(cl, x, y, w, h))
 		 goto updateFailed;
 		break;
+#endif
         }
     }
     if (i) {
@@ -3707,7 +3714,8 @@ rfbProcessUDPInput(rfbScreenInfoPtr rfbScreen)
     }
 }
 
-rfbBool scanLineRLESplit(char* pBuffer,int nCount,int nRunMax,uint16_t* puMRuns,int k,uint32_t cv )
+#ifdef LIBVNCSERVER_HAVE_ML_EXT_ENCODING525
+static rfbBool scanLineRLESplit(char* pBuffer,int nCount,int nRunMax,uint16_t* puMRuns,int k,uint32_t cv )
 {
 	uint16_t uMRuns = *puMRuns;
 	if(nCount >= nRunMax)
@@ -3748,6 +3756,7 @@ rfbBool scanLineRLESplit(char* pBuffer,int nCount,int nRunMax,uint16_t* puMRuns,
 	return TRUE;
 
 }
+
 rfbBool rfbSendRectEncodingScanLineRLE(rfbClientPtr cl, int x,int y,int w,int h)
 {      
     rfbFramebufferUpdateRectHeader rect;
@@ -3912,4 +3921,5 @@ rfbBool rfbSendRectEncodingScanLineRLE(rfbClientPtr cl, int x,int y,int w,int h)
    }
    return TRUE;       
    }
+#endif
 
