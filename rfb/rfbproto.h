@@ -1677,6 +1677,7 @@ typedef struct {
     uint8_t signed_info[86];
     /* (Optional) Signature */
     uint8_t signature[32];
+#if 0
     /**
      * Nonce as provided by the MirrorLink client in Content Attestation Request (Table 24))
      */
@@ -1706,6 +1707,7 @@ typedef struct {
      * Included if SignedInfo flag has bit 2 set.
      */
     uint32_t number_fb_pixels;
+#endif
 } ML_EXT_MSG_PACKED rfbMLExt_ContentAttestationRes_t;
 
 /**
@@ -1730,7 +1732,7 @@ typedef struct {
      * 1 : The signature algorithm is HMAC-SHA-256 signature.
      *     The signed data is defined in Table 22.
      */
-    uint8_t signature_tyue;
+    uint8_t signature_type;
     /**
      * Used session key
      * 0 : No session key included
