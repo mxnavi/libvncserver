@@ -3811,74 +3811,62 @@ rfbBool rfbSendRectEncodingScanLineRLE(rfbClientPtr cl, int x,int y,int w,int h)
 					"------------------wang-l cl->translateFn  = NULL------------");
 		}
 		uint16_t nCount = 0;
-		uint32_t cv;
-		rfbBool bFlag = FALSE;
+		nCount = 1;
+		uMRuns = 1;
+		uint32_t cv = *(uint32_t*) pClientBuffer;
+		cv &= ~(~0U << clientColorDepth);
+		nBufferLength = 2;
 		int j = 0;
-		for (j = 0; j < w; j++) {
+		for (j = 1; j < w - 1; j++) {
 			uint32_t cvTemp = *(uint32_t*) (pClientBuffer + j * nBytesPerPixel);
 			cvTemp &= ~(~0U << clientColorDepth);
-			if (bFlag) {
-
-				if (j == (w - 1)) {
-					if (cv == cvTemp) {
-						nCount++;
-						//TODO split
-						scanLineRLESplit(pBuffer, nCount, nRunMax, &uMRuns, k,
-								cv);
-						nBufferLength = uMRuns * k + 2;
-					} else {
-						//TODO split
-						scanLineRLESplit(pBuffer, nCount, nRunMax, &uMRuns, k,
-								cv);
-						nCount = 1;
-						uMRuns++;
-						int nTempCount = 0;
-						memcpy(pBuffer + (uMRuns - 1) * k + 2, (char*) &cvTemp,
-								k - 1);
-						memcpy(pBuffer + uMRuns * k - 1 + 2, &nTempCount, 1);
-						uMRunsR = Swap16IfLE(uMRuns);
-						memcpy(pBuffer, (char*) &uMRunsR, 2);
-						nBufferLength = uMRuns * k + 2;
-
-					}
-					if (cl->ublen + nBufferLength < UPDATE_BUF_SIZE) {
-						memcpy(&cl->updateBuf[cl->ublen], (char *) pBuffer,
-								nBufferLength);
-						cl->ublen = cl->ublen + nBufferLength;
-					} else {
-
-						if (!rfbSendUpdateBuf(cl)) {
-							return FALSE;
-						}
-						memcpy(&cl->updateBuf[cl->ublen], (char *) pBuffer,
-								nBufferLength);
-						cl->ublen = cl->ublen + nBufferLength;
-					}
-				} else {
-					if (cv == cvTemp) {
-						nCount++;
-					} else {
-						//todo split
-						scanLineRLESplit(pBuffer, nCount, nRunMax, &uMRuns, k,
-								cv);
-						nCount = 1;
-						uMRuns++;
-						cv = cvTemp;
-						uMRunsR = Swap16IfLE(uMRuns);
-						memcpy(pBuffer, (char*) &uMRunsR, 2);
-						nBufferLength = uMRuns * k + 2;
-					}
-				}
+			if (cv == cvTemp) {
+				nCount++;
 			} else {
+				//todo split
+				scanLineRLESplit(pBuffer, nCount, nRunMax, &uMRuns, k,
+						cv);
 				nCount = 1;
-				uMRuns = 1;
+				uMRuns++;
 				cv = cvTemp;
-				uMRunsR = Swap16IfLE(uMRuns);
-				memcpy(pBuffer, (char*) &uMRunsR, 2);
-				bFlag = TRUE;
-				nBufferLength = 2;
+				nBufferLength = uMRuns * k + 2;
 			}
+		}
+		uint32_t cvTemp = *(uint32_t*) (pClientBuffer + (w - 1) * nBytesPerPixel);
+		cvTemp &= ~(~0U << clientColorDepth);
+		if (cv == cvTemp) {
+			nCount++;
+			//TODO split
+			scanLineRLESplit(pBuffer, nCount, nRunMax, &uMRuns, k,
+					cv);
+			nBufferLength = uMRuns * k + 2;
+		} else {
+			//TODO split
+			scanLineRLESplit(pBuffer, nCount, nRunMax, &uMRuns, k,
+					cv);
+			nCount = 1;
+			uMRuns++;
+			int nTempCount = 0;
+			memcpy(pBuffer + (uMRuns - 1) * k + 2, (char*) &cvTemp,
+					k - 1);
+			memcpy(pBuffer + uMRuns * k - 1 + 2, &nTempCount, 1);
+			uMRunsR = Swap16IfLE(uMRuns);
+			memcpy(pBuffer, (char*) &uMRunsR, 2);
+			nBufferLength = uMRuns * k + 2;
+	
+		}
+		if (cl->ublen + nBufferLength < UPDATE_BUF_SIZE) {
+			memcpy(&cl->updateBuf[cl->ublen], (char *) pBuffer,
+					nBufferLength);
+			cl->ublen = cl->ublen + nBufferLength;
+		} else {
 
+			if (!rfbSendUpdateBuf(cl)) {
+				return FALSE;
+			}
+			memcpy(&cl->updateBuf[cl->ublen], (char *) pBuffer,
+					nBufferLength);
+			cl->ublen = cl->ublen + nBufferLength;
 		}
 	}
 	if (cl->ublen > 0) {
