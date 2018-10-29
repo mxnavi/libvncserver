@@ -1128,6 +1128,15 @@ rfbBool rfbCheckMLExtEncoding525(int sock)
     struct tcp_info tcp_info;
     socklen_t len;
 
+#if defined(__ANDROID__)
+    char v[PROPERTY_VALUE_MAX];
+    property_get("persist.ml.vnc-server.forceraw", v, "");
+    if (v[0] != '\0' && v[0] != '0') {
+        rfbErr("Encoding-525 false because forceraw");
+        return FALSE;
+    }
+#endif
+
     len = sizeof(tcp_info);
     rc = getsockopt(sock, IPPROTO_TCP, TCP_INFO, &tcp_info, &len);
     if (rc < 0) {
