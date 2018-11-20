@@ -1044,6 +1044,8 @@ extern void rfbNewFramebuffer(rfbScreenInfoPtr rfbScreen,char *framebuffer,
  int width,int height, int bitsPerSample,int samplesPerPixel,
  int bytesPerPixel);
 
+extern void rfbNewFramebufferOnlySize(rfbScreenInfoPtr rfbScreen, char *framebuffer,
+                       int width, int height);
 extern void rfbScreenCleanup(rfbScreenInfoPtr screenInfo);
 extern void rfbSetServerVersionIdentity(rfbScreenInfoPtr screen, char *fmt, ...);
 

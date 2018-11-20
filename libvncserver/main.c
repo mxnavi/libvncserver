@@ -1018,6 +1018,58 @@ void rfbNewFramebuffer(rfbScreenInfoPtr screen, char *framebuffer,
   rfbReleaseClientIterator(iterator);
 }
 
+/*
+ * Switch to another sized framebuffer. Clients supporting NewFBSize
+ * pseudo-encoding will change their local framebuffer dimensions
+ * if necessary.
+ * NOTE: Rich cursor data should be converted to new pixel format by
+ * the caller.
+ */
+void rfbNewFramebufferOnlySize(rfbScreenInfoPtr rfbScreen, char *framebuffer,
+                       int width, int height)
+{
+  rfbClientIteratorPtr iterator;
+  rfbClientPtr cl;
+
+  if (width & 3)
+    rfbErr("WARNING: New width (%d) is not a multiple of 4.\n", width);
+
+  /* Update information in the rfbScreenInfo structure */
+
+  rfbScreen->width = width;
+  rfbScreen->height = height;
+  rfbScreen->paddedWidthInBytes = width * rfbScreen->bitsPerPixel / 8;
+  rfbScreen->frameBuffer = framebuffer;
+
+  /* Adjust pointer position if necessary */
+
+  if (rfbScreen->cursorX >= width)
+    rfbScreen->cursorX = width - 1;
+  if (rfbScreen->cursorY >= height)
+    rfbScreen->cursorY = height - 1;
+
+  /* For each client: */
+  iterator = rfbGetClientIterator(rfbScreen);
+  while ((cl = rfbClientIteratorNext(iterator)) != NULL) {
+
+    /* Mark the screen contents as changed, and schedule sending
+       NewFBSize message if supported by this client. */
+
+    LOCK(cl->updateMutex);
+    sraRgnDestroy(cl->modifiedRegion);
+    cl->modifiedRegion = sraRgnCreateRect(0, 0, width, height);
+    sraRgnMakeEmpty(cl->copyRegion);
+    cl->copyDX = 0;
+    cl->copyDY = 0;
+
+    if (cl->useNewFBSize)
+      cl->newFBSizePending = TRUE;
+
+    UNLOCK(cl->updateMutex);
+  }
+  rfbReleaseClientIterator(iterator);
+}
+
 /* hang up on all clients and free all reserved memory */
 
 void rfbScreenCleanup(rfbScreenInfoPtr screen)
