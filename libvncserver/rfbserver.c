@@ -2419,7 +2419,7 @@ rfbProcessClientNormalMessage(rfbClientPtr cl)
         else
         {
           if (lastPreferredEncoding==-1) {
-              rfbErr("Using %s encoding for client %s\n", encodingName(cl->preferredEncoding,encBuf,sizeof(encBuf)),cl->host);
+              rfbLog("Using %s encoding for client %s\n", encodingName(cl->preferredEncoding,encBuf,sizeof(encBuf)),cl->host);
           } else {
               rfbLog("Switching from %s to %s Encoding for client %s\n", 
                   encodingName(lastPreferredEncoding,encBuf2,sizeof(encBuf2)),

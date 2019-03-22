@@ -153,7 +153,6 @@ char *encodingName(uint32_t type, char *buf, int len) {
     case rfbEncodingQualityLevel7:  snprintf(buf, len, "QualityLevel7");   break;
     case rfbEncodingQualityLevel8:  snprintf(buf, len, "QualityLevel8");   break;
     case rfbEncodingQualityLevel9:  snprintf(buf, len, "QualityLevel9");   break;
-    case rfbMLExt_Encoding_525:     snprintf(buf, len, "ML525");           break;
 
 
     default:
