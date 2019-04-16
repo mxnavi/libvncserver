@@ -1456,6 +1456,7 @@ SetFormatAndEncodings(rfbClient* client)
       encs[se->nEncodings++] = rfbClientSwap32IfLE(rfbEncodingPointerPos);
   }
 
+#if 0
   /* Keyboard State Encodings */
   if (se->nEncodings < MAX_ENCODINGS)
     encs[se->nEncodings++] = rfbClientSwap32IfLE(rfbEncodingKeyboardLedState);
@@ -1479,6 +1480,7 @@ SetFormatAndEncodings(rfbClient* client)
   /* xvp */
   if (se->nEncodings < MAX_ENCODINGS)
     encs[se->nEncodings++] = rfbClientSwap32IfLE(rfbEncodingXvp);
+#endif
 
   /* client extensions */
   for(e = rfbClientExtensions; e; e = e->next)

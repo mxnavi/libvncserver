@@ -21,6 +21,7 @@
 
 #include <X11/Xlib.h>
 #include <va/va_x11.h>
+#include <termios.h>
 
 enum _slice_types {
 	SLICE_TYPE_P = 0,  /* Predicted */
@@ -83,7 +84,9 @@ static void nv12_to_rgba(const VAImage vaImage, rfbClient *client, int ch_x, int
 
 
 /* FIXME: get this value from the server instead of hardcoding 32bit pixels */
-#define BPP (4 * 8)
+#define BPP (4 * 4)
+
+static FILE* fd = NULL;
 
 static const char *string_of_FOURCC(uint32_t fourcc)
 {
@@ -104,6 +107,31 @@ static inline const char *string_of_VAImageFormat(VAImageFormat *imgfmt)
     return string_of_FOURCC(imgfmt->fourcc);
 }
 
+static FILE* prepareRawOutput(const char* fileName) {
+    FILE* rawFp = NULL;
+
+    if (strcmp(fileName, "-") == 0) {
+        rawFp = stdout;
+    } else {
+        rawFp = fopen(fileName, "w");
+        if (rawFp == NULL) {
+            return NULL;
+        }
+    }
+
+    int fd = fileno(rawFp);
+    if (isatty(fd)) {
+        // best effort -- reconfigure tty for "raw"
+        struct termios term;
+        if (tcgetattr(fd, &term) == 0) {
+            cfmakeraw(&term);
+            if (tcsetattr(fd, TCSANOW, &term) == 0) {
+            }
+        }
+    }
+
+    return rawFp;
+}
 
 static rfbBool
 HandleH264 (rfbClient* client, int rx, int ry, int rw, int rh)
@@ -122,12 +150,27 @@ HandleH264 (rfbClient* client, int rx, int ry, int rw, int rh)
     hdr.width = rfbClientSwap32IfLE(hdr.width);
     hdr.height = rfbClientSwap32IfLE(hdr.height);
 
+    if (hdr.nBytes <= 0) return TRUE;
     framedata = (char*) malloc(hdr.nBytes);
 
     /* Obtain frame data from the server */
-    DebugLog(("Reading %d bytes of frame data (type: %d)\n", hdr.nBytes, hdr.slice_type));
+    DebugLog(("Reading %d bytes of frame data (type: %d), "
+		    "\n", hdr.nBytes, hdr.slice_type));
     if (!ReadFromRFBServer(client, framedata, hdr.nBytes))
         return FALSE;
+    DebugLog(("Read OK\n"));
+
+	if (!fd) {
+		fd = prepareRawOutput("./bb.mp4");
+	}
+
+	if (fd) {
+		fwrite(framedata, 1, hdr.nBytes, fd);
+		// Flush the data immediately in case we're streaming.
+		// We don't want to do this if all we've written is
+		// the SPS/PPS data because mplayer gets confused.
+		fflush(fd);
+	}
 
     /* First make sure we have a large enough raw buffer to hold the
      * decompressed data.  In practice, with a fixed BPP, fixed frame
@@ -250,14 +293,15 @@ static void h264_init_decoder(int width, int height)
         va_sp_param_buf_id[i]  = VA_INVALID_ID;
         va_d_param_buf_id[i]   = VA_INVALID_ID;
     }
-    va_status = vaCreateSurfaces(va_dpy, width, height, VA_RT_FORMAT_YUV420, SURFACE_NUM, &va_surface_id[0]);
+    va_status = vaCreateSurfaces(va_dpy, VA_RT_FORMAT_YUV420, width, height, &va_surface_id[0], SURFACE_NUM,  NULL, 0);
     CHECK_VASTATUS(va_status, "vaCreateSurfaces");
     for (i = 0; i < SURFACE_NUM; ++i) {
         DebugLog(("%s: va_surface_id[%d] = %p\n", __FUNCTION__, i, va_surface_id[i]));
     }
 
     /* Create VA context */
-    va_status = vaCreateContext(va_dpy, va_config_id, width, height, 0/*VA_PROGRESSIVE*/,  &va_surface_id[0], SURFACE_NUM, &va_context_id);
+    va_status = vaCreateContext(va_dpy, va_config_id, width, height,
+		    VA_PROGRESSIVE,  &va_surface_id[0], SURFACE_NUM, &va_context_id);
     CHECK_VASTATUS(va_status, "vaCreateContext");
     DebugLog(("%s: VA context created (id: %d)\n", __FUNCTION__, va_context_id));
 
@@ -273,7 +317,8 @@ static void h264_decode_frame(int f_width, int f_height, char *framedata, int fr
 {
     VAStatus va_status;
 
-    DebugLog(("%s: called for frame of %d bytes (%dx%d) slice_type=%d\n", __FUNCTION__, framesize, width, height, slice_type));
+    DebugLog(("%s: called for frame of %d bytes (%dx%d) slice_type=%d\n",
+		    __FUNCTION__, framesize, f_width, f_height, slice_type));
 
     /* Initialize decode pipeline if necessary */
     if ( (f_width > cur_width) || (f_height > cur_height) ) {
@@ -308,7 +353,9 @@ static void h264_decode_frame(int f_width, int f_height, char *framedata, int fr
 
     /* Set up picture parameter buffer */
     if (va_pic_param_buf_id[sid] == VA_INVALID_ID) {
-        va_status = vaCreateBuffer(va_dpy, va_context_id, VAPictureParameterBufferType, sizeof(VAPictureParameterBufferH264), 1, NULL, &va_pic_param_buf_id[sid]);
+        va_status = vaCreateBuffer(va_dpy, va_context_id,
+        		VAPictureParameterBufferType, sizeof(VAPictureParameterBufferH264),
+			1, NULL, &va_pic_param_buf_id[sid]);
         CHECK_VASTATUS(va_status, "vaCreateBuffer(PicParam)");
     }
     CHECK_SURF(va_surface_id[sid]);
@@ -335,7 +382,9 @@ static void h264_decode_frame(int f_width, int f_height, char *framedata, int fr
 
     /* Set up IQ matrix buffer */
     if (va_mat_param_buf_id[sid] == VA_INVALID_ID) {
-        va_status = vaCreateBuffer(va_dpy, va_context_id, VAIQMatrixBufferType, sizeof(VAIQMatrixBufferH264), 1, NULL, &va_mat_param_buf_id[sid]);
+        va_status = vaCreateBuffer(va_dpy, va_context_id,
+        		VAIQMatrixBufferType, sizeof(VAIQMatrixBufferH264),
+        		1, NULL, &va_mat_param_buf_id[sid]);
         CHECK_VASTATUS(va_status, "vaCreateBuffer(IQMatrix)");
     }
     CHECK_SURF(va_surface_id[sid]);
@@ -385,7 +434,9 @@ static void h264_decode_frame(int f_width, int f_height, char *framedata, int fr
 
     /* Set up slice parameter buffer */
     if (va_sp_param_buf_id[sid] == VA_INVALID_ID) {
-        va_status = vaCreateBuffer(va_dpy, va_context_id, VASliceParameterBufferType, sizeof(VASliceParameterBufferH264), 1, NULL, &va_sp_param_buf_id[sid]);
+        va_status = vaCreateBuffer(va_dpy, va_context_id,
+        		VASliceParameterBufferType, sizeof(VASliceParameterBufferH264),
+			1, NULL, &va_sp_param_buf_id[sid]);
         CHECK_VASTATUS(va_status, "vaCreateBuffer(SliceParam)");
     }
     CHECK_SURF(va_surface_id[sid]);
@@ -413,7 +464,8 @@ static void h264_decode_frame(int f_width, int f_height, char *framedata, int fr
     /* Set up slice data buffer and copy H.264 encoded data */
     if (va_d_param_buf_id[sid] == VA_INVALID_ID) {
         /* TODO use estimation matching framebuffer dimensions instead of this large value */
-        va_status = vaCreateBuffer(va_dpy, va_context_id, VASliceDataBufferType, 4177920, 1, NULL, &va_d_param_buf_id[sid]); /* 1080p size */
+        va_status = vaCreateBuffer(va_dpy, va_context_id, VASliceDataBufferType,
+        		4177920, 1, NULL, &va_d_param_buf_id[sid]); /* 1080p size */
         CHECK_VASTATUS(va_status, "vaCreateBuffer(SliceData)");
     }
 
@@ -462,7 +514,8 @@ static void h264_decode_frame(int f_width, int f_height, char *framedata, int fr
     memcpy(&va_old_picture_h264, &va_picture_h264, sizeof(VAPictureH264));
 }
 
-static void put_updated_rectangle(rfbClient *client, int x, int y, int width, int height, int f_width, int f_height, int first_for_frame)
+static void put_updated_rectangle(rfbClient *client,
+		int x, int y, int width, int height, int f_width, int f_height, int first_for_frame)
 {
     if (curr_surface == VA_INVALID_ID) {
         rfbClientErr("%s: called, but current surface is invalid\n", __FUNCTION__);
@@ -475,7 +528,9 @@ static void put_updated_rectangle(rfbClient *client, int x, int y, int width, in
         /* use efficient vaPutSurface() method of putting the framebuffer on the screen */
         if (first_for_frame) {
             /* vaPutSurface() clears window contents outside the given destination rectangle => always update full screen. */
-            va_status = vaPutSurface(va_dpy, curr_surface, client->outputWindow, 0, 0, f_width, f_height, 0, 0, f_width, f_height, NULL, 0, VA_FRAME_PICTURE);
+            va_status = vaPutSurface(va_dpy, curr_surface,
+        		    client->outputWindow, 0, 0, f_width, f_height, 0, 0, f_width, f_height,
+			    NULL, 0, VA_FRAME_PICTURE);
             CHECK_VASTATUS(va_status, "vaPutSurface");
         }
     }
