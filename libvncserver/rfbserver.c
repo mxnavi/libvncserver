@@ -2232,6 +2232,9 @@ rfbProcessClientNormalMessage(rfbClientPtr cl)
 #ifdef LIBVNCSERVER_HAVE_ML_EXT_ENCODING525
 	    case rfbMLExt_Encoding_525:
 #endif
+#ifdef LIBVNCSERVER_HAVE_ML_EXT_ENCODINGH264
+	    case rfbEncodingH264:
+#endif
             /* The first supported encoding is the 'preferred' encoding */
                 if (cl->preferredEncoding == -1)
 #ifdef LIBVNCSERVER_HAVE_ML_EXT_ENCODING525
@@ -3270,6 +3273,12 @@ rfbSendFramebufferUpdate(rfbClientPtr cl,
 		 goto updateFailed;
 		break;
 #endif
+#ifdef LIBVNCSERVER_HAVE_ML_EXT_ENCODINGH264
+	case rfbEncodingH264:
+	    if(!rfbSendRectEncodingH264(cl, x, y, w, h))
+		 goto updateFailed;
+		break;
+#endif
         }
     }
     if (i) {
@@ -3877,4 +3886,63 @@ rfbBool rfbSendRectEncodingScanLineRLE(rfbClientPtr cl, int x,int y,int w,int h)
 	return TRUE;
    }
 #endif
+#ifdef LIBVNCSERVER_HAVE_ML_EXT_ENCODINGH264
+rfbBool rfbSendRectEncodingH264(rfbClientPtr cl, int x, int y, int w,
+		int h) {
+	rfbFramebufferUpdateRectHeader rect;
+	/* Flush the buffer to guarantee correct alignment for translateFn(). */
+	if (cl->ublen > 0) {
+		if (!rfbSendUpdateBuf(cl))
+			return FALSE;
+	}
 
+	rect.r.x = Swap16IfLE(x);
+	rect.r.y = Swap16IfLE(y);
+	rect.r.w = Swap16IfLE(w);
+	rect.r.h = Swap16IfLE(h);
+	rect.encoding = Swap32IfLE(rfbEncodingH264);
+	memcpy(&cl->updateBuf[cl->ublen], (char *) &rect, sz_rfbFramebufferUpdateRectHeader);
+	cl->ublen += sz_rfbFramebufferUpdateRectHeader;
+
+	rfbH264Header hdr;
+	uint32_t type = 0;
+	switch (cl->screen->frameBuffer[4] & 0x1f) {
+	case 5://I Frame
+	case 6://SPS
+	case 7://PPS
+		type = 2;
+		break;
+	default:
+		break;
+	}
+
+	hdr.slice_type = Swap32IfLE(type);
+	hdr.width = Swap32IfLE(w);
+	hdr.height = Swap32IfLE(h);
+	hdr.nBytes = Swap32IfLE(cl->buf_size);
+
+	memcpy(&cl->updateBuf[cl->ublen], (char *) &hdr, sz_rfbH264Header);
+	cl->ublen += sz_rfbH264Header;
+
+	if (cl->buf_size + cl->ublen < UPDATE_BUF_SIZE) {
+		memcpy(&cl->updateBuf[cl->ublen], cl->screen->frameBuffer,
+				cl->buf_size);
+		cl->ublen += cl->buf_size;
+	} else {
+		memcpy(&cl->updateBuf[cl->ublen], cl->screen->frameBuffer,
+				UPDATE_BUF_SIZE - cl->ublen);
+		int reset = UPDATE_BUF_SIZE - cl->ublen;
+		cl->ublen = UPDATE_BUF_SIZE;
+		if (!rfbSendUpdateBuf(cl))
+			return FALSE;
+
+		memcpy(&cl->updateBuf[cl->ublen],
+				&cl->screen->frameBuffer[reset], cl->buf_size - reset);
+		cl->ublen += cl->buf_size - reset;
+	}
+
+	rfbLog("send 264 done, [%s] frame l=[%d]\n",
+			(type == 2) ? "I" : "not I", cl->buf_size);
+	return TRUE;
+}
+#endif

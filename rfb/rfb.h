@@ -699,6 +699,7 @@ typedef struct _rfbClientRec {
     wsCtx     *wsctx;
     char *wspath;                          /* Requests path component */
 #endif
+    size_t buf_size; //For H264 encoding
 } rfbClientRec, *rfbClientPtr;
 
 /**
@@ -873,6 +874,9 @@ extern rfbBool rfbSendRectEncodingUltra(rfbClientPtr cl, int x,int y,int w,int h
 extern rfbBool rfbSendRectEncodingScanLineRLE(rfbClientPtr cl, int x,int y,int w,int h);
 #endif
 
+#ifdef LIBVNCSERVER_HAVE_ML_EXT_ENCODINGH264
+extern rfbBool rfbSendRectEncodingH264(rfbClientPtr cl, int x,int y,int w,int h);
+#endif
 #ifdef LIBVNCSERVER_HAVE_LIBZ
 /* zlib.c */
 
