@@ -13,7 +13,7 @@
 ### ``make help'' for usage help.
 
 # What's the executable called?
-PROJ = libvncclient
+PROJ = libmlvncclient
 
 LOCAL_PATH:= $(shell pwd)
 
