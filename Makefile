@@ -27,9 +27,8 @@ vncclient_SRC_FILES := \
     libvncclient/rfbproto.c \
     libvncclient/sockets.c \
     libvncclient/vncviewer.c \
+    libvncclient/tls_none.c \
     common/minilzo.c \
-
-    # libvncclient/tls_gnutls.c \
 
 LOCAL_SRC_FILES := \
     $(vncclient_SRC_FILES)
@@ -54,7 +53,7 @@ LOCAL_CFLAGS += -ULIBVNCSERVER_HAVE_LIBSSL  -ULIBVNCSERVER_HAVE_TLS \
     -ULIBVNCSERVER_HAVE_LIBJPEG -ULIBVNCSERVER_HAVE_LIBNSL \
     -ULIBVNCSERVER_HAVE_LIBPNG -ULIBVNCSERVER_HAVE_X11 -ULIBVNCSERVER_IPv6 \
     -ULIBVNCSERVER_WITH_WEBSOCKETS \
-    -DHAVE_LIBSSL -DWITH_WEBSOCKETS
+    -UHAVE_LIBSSL -UWITH_WEBSOCKETS
 
 
 LOCAL_LIBNAMES += 
