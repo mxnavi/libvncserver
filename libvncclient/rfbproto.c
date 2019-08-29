@@ -1939,6 +1939,12 @@ HandleRFBServerMessage(rfbClient* client)
           if (!ReadFromRFBServer(client, (char*)&ctx,
 				 sz_rfbMLExtContextInformation))
                  return FALSE;
+          ctx.app_unique_id  = rfbClientSwap32IfLE(ctx.app_unique_id);
+          ctx.app_category_trust_level  = rfbClientSwap16IfLE(ctx.app_category_trust_level);
+          ctx.content_category_trust_level  = rfbClientSwap16IfLE(ctx.content_category_trust_level);
+          ctx.app_category  = rfbClientSwap32IfLE(ctx.app_category);
+          ctx.content_category  = rfbClientSwap32IfLE(ctx.content_category);
+          ctx.content_rules_bits  = rfbClientSwap32IfLE(ctx.content_rules_bits);
           rfbClientLog("app_unique_id: 0x%x"
                   " trust level: 0x%02x 0x%02x"
                   " app_category: 0x%x content_category: 0x%x"
