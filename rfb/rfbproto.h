@@ -1284,32 +1284,67 @@ typedef struct {
      * [0] : Server-side framebuffer orientation switch available
      *  The VNC Server MUST start in default orientation,
      *  given in the Server Init message.
+     * <<1.3>>
+     *       Deprecated. Shall be set to "0" (no support).
      * [1] : Server-side framebuffer rotation available
      *  The VNC Server MUST start with no rotation.
+     * <<1.3>>
+     *       Deprecated. Shall be set to "0" (no support).
      * [2] : Server-side framebuffer up-scaling available
+     * <<1.3>>
+     *       Deprecated. Shall be set to "0" (no support).
      * [3] : Server-side framebuffer down-scaling available
      * [5] : Server supports Framebuffer Alternative Text messages.
+     * <<1.3>>
+     *       Deprecated. Shall be set to "0" (no support).
      */
     uint16_t fb_cfg;
-    /* Relative pixel width (set to zero, if relative width not known) */
+    /**
+     * Relative pixel width (set to zero, if relative width not known)
+     * <<1.3>>
+     *       Deprecated. Shall be set to "1".
+     */
     uint16_t relative_w;
-    /* Relative pixel Height (set to zero, if relative width not known) */
+    /**
+     * Relative pixel Height (set to zero, if relative width not known)
+     *
+     * <<1.3>>
+     *       Deprecated. Shall be set to "1".
+     */
     uint16_t relative_h;
     /**
      * Pixel format support (1 = yes, 0 = no)
      * [0] : 32-bit ARGB 888 (mandatory support for VNC Server)
      * [7] : Any other 32-bit format
+     * <<1.3>>
+     *       Deprecated. Shall be set to "0" (no support).
      * [8] : 24-bit RGB 888
+     * <<1.3>>
+     *       Deprecated. Shall be set to "0" (no support).
      * [15] : Any other 24-bit format
+     * <<1.3>>
+     *       Deprecated. Shall be set to "0" (no support).
      * [16] : 16-bit RGB 565 (mandatory support for VNC Server)
      * [17] : 16-bit RGB 555 (15 bit color depth)
+     * <<1.3>>
+     *       Deprecated. Shall be set to "0" (no support).
      * [18] : 16-bit RGB 444 (12 bit color depth)
+     * <<1.3>>
+     *       Deprecated. Shall be set to "0" (no support).
      * [19] : 16-bit RGB 343 (10 bit color depth)
+     * <<1.3>>
+     *       Deprecated. Shall be set to "0" (no support).
      * [23] : Any other 16-bit format
+     * <<1.3>>
+     *       Deprecated. Shall be set to "0" (no support).
      * [24] : 16-bit single color (grayscale)
+     * <<1.3>>
+     *       Deprecated. Shall be set to "0" (no support).
      *   Client MUST use red_shift and red_mask to set gray range
      * [25] : 8-bit single color (grayscale)
      *   Client MUST use red_shift and red_mask to set gray range
+     * <<1.3>>
+     *       Deprecated. Shall be set to "0" (no support).
      */
     uint32_t format_support;
 } ML_EXT_MSG_PACKED rfbMLExt_ServerDispCfg_t;
@@ -1406,8 +1441,17 @@ typedef struct {
     /**
      * Key related (1 = support, 0 = no support)
      * [0] : ITU keypad (T9) events (‘0’, ... ,’9’, ‘#’, ‘*”)
+     * <<1.3>>
+     * Deprecated. Shall be set to "0" (no support).
+     *
      * [1] : Virtual keyboard trigger support
+     * <<1.3>>
+     * Deprecated. Shall be set to "0" (no support).
+     *
      * [2] : Key event listing support
+     * <<1.3>>
+     * Deprecated. Shall be set to "0" (no support).
+     *
      * [3] : Event mapping support (MUST be ‘1’)
      * [15:8] : # additional Function keys, the server supports
      *   Key events start with Function_Key 0, no subsequent gaps
