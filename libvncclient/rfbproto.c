@@ -1328,6 +1328,10 @@ SetFormatAndEncodings(rfbClient* client)
 
       if (strncasecmp(encStr,"raw",encStrLen) == 0) {
 	encs[se->nEncodings++] = rfbClientSwap32IfLE(rfbEncodingRaw);
+#ifdef LIBVNCSERVER_HAVE_ML_EXT_ENCODING525
+      } else if (strncasecmp(encStr, "slrle", encStrLen) == 0) {
+        encs[se->nEncodings++] = rfbClientSwap32IfLE(rfbMLExt_Encoding_525);
+#endif
       } else if (strncasecmp(encStr,"copyrect",encStrLen) == 0) {
 	encs[se->nEncodings++] = rfbClientSwap32IfLE(rfbEncodingCopyRect);
 #ifdef LIBVNCSERVER_HAVE_LIBZ
