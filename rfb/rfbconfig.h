@@ -25,7 +25,12 @@
 #define LIBVNCSERVER_HAVE_ML_EXT 1
 #endif
 
- #define LIBVNCSERVER_HAVE_ML_EXT_ENCODING525 1
+#if LIBVNCSERVER_HAVE_ML_EXT
+/* Scan Line based Run-Length Encoding */
+#ifndef LIBVNCSERVER_HAVE_ML_EXT_ENCODING525
+#define LIBVNCSERVER_HAVE_ML_EXT_ENCODING525 1
+#endif
+#endif
 
 // #define LIBVNCSERVER_HAVE_ML_EXT_ENCODINGH264 1
 /* Define to 1 if you have the <arpa/inet.h> header file. */
