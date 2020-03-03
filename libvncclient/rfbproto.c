@@ -1370,7 +1370,8 @@ SetFormatAndEncodings(rfbClient* client)
 	encs[se->nEncodings++] = rfbClientSwap32IfLE(rfbEncodingCoRRE);
       } else if (strncasecmp(encStr,"rre",encStrLen) == 0) {
 	encs[se->nEncodings++] = rfbClientSwap32IfLE(rfbEncodingRRE);
-#ifdef LIBVNCSERVER_CONFIG_LIBVA
+#if defined(LIBVNCSERVER_CONFIG_LIBVA) ||                                      \
+    defined(LIBVNCSERVER_HAVE_ML_EXT_ENCODINGH264)
       } else if (strncasecmp(encStr,"h264",encStrLen) == 0) {
 	encs[se->nEncodings++] = rfbClientSwap32IfLE(rfbEncodingH264);
 #endif
@@ -1442,7 +1443,8 @@ SetFormatAndEncodings(rfbClient* client)
       encs[se->nEncodings++] = rfbClientSwap32IfLE(client->appData.qualityLevel +
 					  rfbEncodingQualityLevel0);
     }
-#ifdef LIBVNCSERVER_CONFIG_LIBVA
+#if defined(LIBVNCSERVER_CONFIG_LIBVA) ||                                      \
+    defined(LIBVNCSERVER_HAVE_ML_EXT_ENCODINGH264)
     encs[se->nEncodings++] = rfbClientSwap32IfLE(rfbEncodingH264);
     rfbClientLog("h264 encoding added\n");
 #endif
@@ -2187,11 +2189,11 @@ HandleRFBServerMessage(rfbClient* client)
 
 #endif
 #ifdef LIBVNCSERVER_CONFIG_LIBVA
-      case rfbEncodingH264:
-      {
-	if (!HandleH264(client, rect.r.x, rect.r.y, rect.r.w, rect.r.h))
-	  return FALSE;
-	break;
+     /* use extension handler for 'LIBVNCSERVER_HAVE_ML_EXT_ENCODINGH264' */
+     case rfbEncodingH264: {
+       if (!HandleH264(client, rect.r.x, rect.r.y, rect.r.w, rect.r.h))
+         return FALSE;
+       break;
       }
 #endif
 
