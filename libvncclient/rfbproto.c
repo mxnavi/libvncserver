@@ -1529,7 +1529,14 @@ SendFramebufferUpdateRequest(rfbClient* client, int x, int y, int w, int h, rfbB
   rfbFramebufferUpdateRequestMsg fur;
 
   if (!SupportsClient2Server(client, rfbFramebufferUpdateRequest)) return TRUE;
-  
+
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
+  extern int __vnc_fb_is_blocking(rfbClient * client);
+  if (__vnc_fb_is_blocking(client)) {
+    rfbClientLog("fb blocking, skip sending update");
+    return TRUE;
+  }
+#endif
   fur.type = rfbFramebufferUpdateRequest;
   fur.incremental = incremental ? 1 : 0;
   fur.x = rfbClientSwap16IfLE(x);
