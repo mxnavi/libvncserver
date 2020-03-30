@@ -195,13 +195,6 @@ typedef struct _rfbClient {
 		int x, y, w, h;
 	} updateRect;
 
-	/** Note that the CoRRE encoding uses this buffer and assumes it is big enough
-	   to hold 255 * 255 * 32 bits -> 260100 bytes.  640*480 = 307200 bytes.
-	   Hextile also assumes it is big enough to hold 16 * 16 * 32 bits.
-	   Tight encoding assumes BUFFER_SIZE is at least 16384 bytes. */
-
-#define RFB_BUFFER_SIZE (640*480)
-	char buffer[RFB_BUFFER_SIZE];
 
 	/* rfbproto.c */
 
@@ -353,6 +346,14 @@ typedef struct _rfbClient {
 
         /* Output Window ID. When set, client application enables libvncclient to perform direct rendering in its window */
         unsigned long outputWindow;
+
+	/** Note that the CoRRE encoding uses this buffer and assumes it is big enough
+	   to hold 255 * 255 * 32 bits -> 260100 bytes.  640*480 = 307200 bytes.
+	   Hextile also assumes it is big enough to hold 16 * 16 * 32 bits.
+	   Tight encoding assumes BUFFER_SIZE is at least 16384 bytes. */
+
+#define RFB_BUFFER_SIZE (800*480)
+	char buffer[RFB_BUFFER_SIZE];
 
 } rfbClient;
 
