@@ -896,7 +896,7 @@ int rfbWriteExactV(rfbClientPtr cl, struct iovec *iov, int cnt) {
          * immediately when the other end has gone away */
 
         FD_ZERO(&fds);
-        FD_SET(sock, &fds);
+        FD_SET(s, &fds);
         tv.tv_sec = 5;
         tv.tv_usec = 0;
 
