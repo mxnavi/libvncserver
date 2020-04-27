@@ -52,6 +52,10 @@ extern "C"
 #include <sys/types.h>
 #endif
 
+#ifdef LIBVNCSERVER_HAVE_ML_EXT /* for writev(2) */
+#include <sys/uio.h>
+#endif
+
 #ifdef WIN32
 #undef SOCKET
 #include <winsock2.h>
@@ -754,6 +758,9 @@ extern int rfbReadExact(rfbClientPtr cl, char *buf, int len);
 extern int rfbReadExactTimeout(rfbClientPtr cl, char *buf, int len,int timeout);
 extern int rfbPeekExactTimeout(rfbClientPtr cl, char *buf, int len,int timeout);
 extern int rfbWriteExact(rfbClientPtr cl, const char *buf, int len);
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
+extern int rfbWriteExactV(rfbClientPtr cl, struct iovec *iov, int cnt);
+#endif
 extern int rfbCheckFds(rfbScreenInfoPtr rfbScreen,long usec);
 extern int rfbConnect(rfbScreenInfoPtr rfbScreen, char* host, int port);
 extern int rfbConnectToTcpAddr(char* host, int port);

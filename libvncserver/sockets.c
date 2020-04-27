@@ -859,6 +859,78 @@ rfbWriteExact(rfbClientPtr cl,
     return 1;
 }
 
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
+int rfbWriteExactV(rfbClientPtr cl, struct iovec *iov, int cnt) {
+  ssize_t n;
+  int s = cl->sock;
+
+  int totalTimeWaited = 0;
+  const int timeout = (cl->screen && cl->screen->maxClientWait)
+                          ? cl->screen->maxClientWait
+                          : rfbMaxClientWait;
+
+  LOCK(cl->outputMutex);
+  for (;;) {
+    n = writev(s, iov, cnt);
+    if (n > 0) {
+      while ((cnt > 0) && (n >= (ssize_t)(iov->iov_len))) {
+        n -= iov->iov_len;
+        ++iov;
+        --cnt;
+      }
+      if (cnt == 0)
+        break;
+
+      iov->iov_base = ((char *)(iov->iov_base)) + n;
+      iov->iov_len -= ((size_t)n);
+    } else if (n == 0) {
+      goto exit;
+    } else {
+      if (errno == EINTR)
+        continue;
+      if (errno == EAGAIN) {
+        fd_set fds;
+        struct timeval tv;
+        /* Retry every 5 seconds until we exceed timeout.
+         * We need to do this because select doesn't necessarily return
+         * immediately when the other end has gone away */
+
+        FD_ZERO(&fds);
+        FD_SET(sock, &fds);
+        tv.tv_sec = 5;
+        tv.tv_usec = 0;
+
+        int rc = select(s + 1, NULL, &fds, NULL /* &fds */, &tv);
+        if (rc < 0) {
+          if (errno == EINTR)
+            continue;
+          rfbLogPerror("WriteExactV: select");
+          goto exit;
+        }
+        if (rc == 0) {
+          totalTimeWaited += 5000;
+          if (totalTimeWaited >= timeout) {
+            errno = ETIMEDOUT;
+            goto exit;
+          }
+        } else {
+          totalTimeWaited = 0;
+        }
+        continue;
+      }
+      rfbLogPerror("WriteExactV: writev");
+      goto exit;
+    }
+  }
+  UNLOCK(cl->outputMutex);
+  return 1;
+
+exit:
+  UNLOCK(cl->outputMutex);
+  return -1;
+}
+#endif
+
 /* currently private, called by rfbProcessArguments() */
 int
 rfbStringToAddr(char *str, in_addr_t *addr)  {
