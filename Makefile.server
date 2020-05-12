@@ -13,30 +13,61 @@
 ### ``make help'' for usage help.
 
 # What's the executable called?
-PROJ = libmlvncclient
+PROJ = libmlvncserver
 
 LOCAL_PATH:= $(shell pwd)
 
-
 ####################################################
-vncclient_SRC_FILES := \
-    libvncclient/cursor.c \
-    libvncclient/listen.c \
-    libvncclient/rfbproto.c \
-    libvncclient/sockets.c \
-    libvncclient/vncviewer.c \
-    libvncclient/tls_none.c \
+vncserver_SRC_FILES := \
+    libvncserver/auth.c \
+    libvncserver/cargs.c \
+    libvncserver/corre.c \
+    libvncserver/cursor.c \
+    libvncserver/cutpaste.c \
+    libvncserver/draw.c \
+    libvncserver/font.c \
+    libvncserver/hextile.c \
+    libvncserver/httpd.c \
+    libvncserver/main.c \
+    libvncserver/rfbregion.c \
+    libvncserver/rfbserver.c \
+    libvncserver/rre.c \
+    libvncserver/scale.c \
+    libvncserver/selbox.c \
+    libvncserver/sockets.c \
+    libvncserver/stats.c \
+    libvncserver/translate.c \
+    libvncserver/ultra.c \
+    libvncserver/zlib.c \
+    libvncserver/zrle.c \
+    libvncserver/zrleoutstream.c \
+    libvncserver/zrlepalettehelper.c \
+    libvncserver/rfbssl_none.c \
+    common/d3des.c \
     common/minilzo.c \
+    common/sha1.c \
+    common/vncauth.c \
+    test/bmp.c
+
+
+    #libvncserver/tight.c \
+    libvncserver/rfbcrypto_openssl.c \
+    libvncserver/rfbssl_openssl.c \
+    libvncserver/websockets.c \
+    common/turbojpeg.c \
+
 
 LOCAL_SRC_FILES := \
-    $(vncclient_SRC_FILES)
+    $(vncserver_SRC_FILES)
 
 LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/ \
     $(LOCAL_PATH)/include \
     $(LOCAL_PATH)/build \
-    $(LOCAL_PATH)/libvncclient \
+    $(LOCAL_PATH)/lib \
+    $(LOCAL_PATH)/libvncserver \
     $(LOCAL_PATH)/common \
+    $(ROOT_DIR)/external/zlib \
 
 LOCAL_CFLAGS += -Wno-format
 LOCAL_CFLAGS += -Wno-unused-result
@@ -45,13 +76,15 @@ LOCAL_CFLAGS += -Wno-unused-parameter -Wno-sign-compare -Wno-pointer-sign -Wno-d
 
 LOCAL_CFLAGS += -DLIBVNCSERVER_HAVE_ML_EXT=1
 
-LOCAL_CFLAGS += -ULIBVNCSERVER_HAVE_LIBSSL  -ULIBVNCSERVER_HAVE_TLS \
+LOCAL_CFLAGS += -fvisibility=hidden
+
+LOCAL_CFLAGS += \
+    -ULIBVNCSERVER_HAVE_LIBSSL  -ULIBVNCSERVER_HAVE_TLS \
     -ULIBVNCSERVER_HAVE_LIBJPEG -ULIBVNCSERVER_HAVE_LIBNSL \
     -ULIBVNCSERVER_HAVE_LIBPNG -ULIBVNCSERVER_HAVE_X11 -ULIBVNCSERVER_IPv6 \
     -ULIBVNCSERVER_WITH_WEBSOCKETS \
-    -UHAVE_LIBSSL -UWITH_WEBSOCKETS
-
-LOCAL_CFLAGS += -fvisibility=hidden
+    -D__ANDROID__ -DHAVE_LIBSSL -DWITH_WEBSOCKETS \
+    -Wall
 
 LOCAL_LIBNAMES += 
 LOCAL_LIBDIRS += 
