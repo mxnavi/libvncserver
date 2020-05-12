@@ -38,10 +38,6 @@ vncserver_SRC_FILES := \
     libvncserver/stats.c \
     libvncserver/translate.c \
     libvncserver/ultra.c \
-    libvncserver/zlib.c \
-    libvncserver/zrle.c \
-    libvncserver/zrleoutstream.c \
-    libvncserver/zrlepalettehelper.c \
     libvncserver/rfbssl_none.c \
     common/d3des.c \
     common/minilzo.c \
@@ -49,6 +45,12 @@ vncserver_SRC_FILES := \
     common/vncauth.c \
     test/bmp.c
 
+
+# not 'LIBVNCSERVER_HAVE_LIBZ'
+    #libvncserver/zlib.c \
+    libvncserver/zrle.c \
+    libvncserver/zrleoutstream.c \
+    libvncserver/zrlepalettehelper.c \
 
     #libvncserver/tight.c \
     libvncserver/rfbcrypto_openssl.c \
@@ -67,7 +69,6 @@ LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/lib \
     $(LOCAL_PATH)/libvncserver \
     $(LOCAL_PATH)/common \
-    $(ROOT_DIR)/external/zlib \
 
 LOCAL_CFLAGS += -Wno-format
 LOCAL_CFLAGS += -Wno-unused-result
@@ -83,7 +84,7 @@ LOCAL_CFLAGS += \
     -ULIBVNCSERVER_HAVE_LIBJPEG -ULIBVNCSERVER_HAVE_LIBNSL \
     -ULIBVNCSERVER_HAVE_LIBPNG -ULIBVNCSERVER_HAVE_X11 -ULIBVNCSERVER_IPv6 \
     -ULIBVNCSERVER_WITH_WEBSOCKETS \
-    -D__ANDROID__ -DHAVE_LIBSSL -DWITH_WEBSOCKETS \
+    -DHAVE_LIBSSL -DWITH_WEBSOCKETS \
     -Wall
 
 LOCAL_LIBNAMES += 
