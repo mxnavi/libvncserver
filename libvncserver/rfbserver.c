@@ -2494,7 +2494,10 @@ rfbProcessClientNormalMessage(rfbClientPtr cl)
        UNLOCK(cl->updateMutex);
 
        sraRgnDestroy(tmpRegion);
-
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
+       extern void __vnc_fb_update_req(rfbClientPtr cl);
+       __vnc_fb_update_req(cl);
+#endif
        return;
     }
 
@@ -3768,6 +3771,7 @@ rfbBool rfbSendRectEncodingScanLineRLE(rfbClientPtr cl, int x,int y,int w,int h)
 	rfbFramebufferUpdateRectHeader rect;
 	int nlines;
 	int bytesPerLine = w * (cl->format.bitsPerPixel / 8);
+        size_t acc_bytes = 0;
 
 	/* Flush the buffer to guarantee correct alignment for translateFn(). */
 	if (cl->ublen > 0) {
@@ -3869,20 +3873,27 @@ rfbBool rfbSendRectEncodingScanLineRLE(rfbClientPtr cl, int x,int y,int w,int h)
 					nBufferLength);
 			cl->ublen = cl->ublen + nBufferLength;
 		} else {
-
+                        acc_bytes += cl->ublen;
 			if (!rfbSendUpdateBuf(cl)) {
 				return FALSE;
 			}
+
 			memcpy(&cl->updateBuf[cl->ublen], (char *) pBuffer,
 					nBufferLength);
 			cl->ublen = cl->ublen + nBufferLength;
 		}
 	}
 	if (cl->ublen > 0) {
+                acc_bytes += cl->ublen;
 		if (!rfbSendUpdateBuf(cl)) {
 			return FALSE;
 		}
+
 	}
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
+       extern void __vnc_fb_encoding525_bytes(rfbClientPtr cl, size_t acc_bytes);
+       __vnc_fb_encoding525_bytes(cl, acc_bytes);
+#endif
 	return TRUE;
    }
 #endif
@@ -3895,14 +3906,15 @@ rfbBool rfbSendRectEncodingH264(rfbClientPtr cl, int x, int y, int w,
 		if (!rfbSendUpdateBuf(cl))
 			return FALSE;
 	}
+        struct iovec iov[3];
 
 	rect.r.x = Swap16IfLE(x);
 	rect.r.y = Swap16IfLE(y);
 	rect.r.w = Swap16IfLE(w);
 	rect.r.h = Swap16IfLE(h);
 	rect.encoding = Swap32IfLE(rfbEncodingH264);
-	memcpy(&cl->updateBuf[cl->ublen], (char *) &rect, sz_rfbFramebufferUpdateRectHeader);
-	cl->ublen += sz_rfbFramebufferUpdateRectHeader;
+        iov[0].iov_base = &rect;
+        iov[0].iov_len = sz_rfbFramebufferUpdateRectHeader;
 
 	rfbH264Header hdr;
 	uint32_t type = 0;
@@ -3920,29 +3932,18 @@ rfbBool rfbSendRectEncodingH264(rfbClientPtr cl, int x, int y, int w,
 	hdr.width = Swap32IfLE(w);
 	hdr.height = Swap32IfLE(h);
 	hdr.nBytes = Swap32IfLE(cl->buf_size);
+        iov[1].iov_base = &hdr;
+        iov[1].iov_len = sz_rfbH264Header;
 
-	memcpy(&cl->updateBuf[cl->ublen], (char *) &hdr, sz_rfbH264Header);
-	cl->ublen += sz_rfbH264Header;
 
-	if (cl->buf_size + cl->ublen < UPDATE_BUF_SIZE) {
-		memcpy(&cl->updateBuf[cl->ublen], cl->screen->frameBuffer,
-				cl->buf_size);
-		cl->ublen += cl->buf_size;
-	} else {
-		memcpy(&cl->updateBuf[cl->ublen], cl->screen->frameBuffer,
-				UPDATE_BUF_SIZE - cl->ublen);
-		int reset = UPDATE_BUF_SIZE - cl->ublen;
-		cl->ublen = UPDATE_BUF_SIZE;
-		if (!rfbSendUpdateBuf(cl))
-			return FALSE;
+        iov[2].iov_base = cl->screen->frameBuffer;
+        iov[2].iov_len = cl->buf_size;
+        if (rfbWriteExactV(cl, iov, sizeof(iov) / sizeof(iov[0])) < 0) {
+            rfbLogPerror("rfbSendUpdateBuf: rfbWriteExactV");
+            rfbCloseClient(cl);
+            return FALSE;
+        }
 
-		memcpy(&cl->updateBuf[cl->ublen],
-				&cl->screen->frameBuffer[reset], cl->buf_size - reset);
-		cl->ublen += cl->buf_size - reset;
-	}
-
-	rfbLog("send 264 done, [%s] frame l=[%d]\n",
-			(type == 2) ? "I" : "not I", cl->buf_size);
 	return TRUE;
 }
 #endif
