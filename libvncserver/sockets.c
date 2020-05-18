@@ -1196,10 +1196,6 @@ rfbSetNonBlocking(int sock)
 
 rfbBool rfbCheckMLExtEncoding525(int sock)
 {
-    int rc;
-    struct tcp_info tcp_info;
-    socklen_t len;
-
 #if defined(__ANDROID__)
     char v[PROPERTY_VALUE_MAX];
     property_get("persist.ml.vnc-server.forceraw", v, "");
@@ -1208,23 +1204,6 @@ rfbBool rfbCheckMLExtEncoding525(int sock)
         return FALSE;
     }
 #endif
-
-    len = sizeof(tcp_info);
-    rc = getsockopt(sock, IPPROTO_TCP, TCP_INFO, &tcp_info, &len);
-    if (rc < 0) {
-        rfbLogPerror("TCP_INFO getsockopt failed");
-        return TRUE;
-    }
-
-#if 0
-    rfbErr("tcpi_snd_mss: %u tcpi_rcv_mss: %u tcpi_advmss: %u tcpi_snd_cwnd: %u",
-       tcp_info.tcpi_snd_mss, tcp_info.tcpi_rcv_mss, tcp_info.tcpi_advmss, tcp_info.tcpi_snd_cwnd);
-#endif
-    // CNS2.0 head unit
-    if (tcp_info.tcpi_snd_mss == tcp_info.tcpi_advmss) {
-        rfbErr("Encoding-525 false");
-        return FALSE;
-    }
     return TRUE;
 }
- 
+
