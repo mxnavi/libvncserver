@@ -414,5 +414,7 @@ void rfbClientCleanup(rfbClient* client) {
     free(client->destHost);
   if (client->clientAuthSchemes)
     free(client->clientAuthSchemes);
+  if (client->frameBuffer) /* chenbd */
+    free(client->frameBuffer);
   free(client);
 }
