@@ -107,7 +107,7 @@
 #include <direct.h>
 #endif
 
-#ifdef __ANDROID__
+#ifdef PLATFORM_SDK_VERSION
 #include <cutils/atomic.h>
 #endif
 
@@ -133,7 +133,7 @@ static void rfbProcessClientInitMessage(rfbClientPtr cl);
 #ifdef LIBVNCSERVER_HAVE_LIBPTHREAD
 void rfbIncrClientRef(rfbClientPtr cl)
 {
-#ifdef __ANDROID__
+#ifdef PLATFORM_SDK_VERSION
   android_atomic_inc(&cl->refCount);
 #else
   LOCK(cl->refCountMutex);
@@ -144,7 +144,7 @@ void rfbIncrClientRef(rfbClientPtr cl)
 
 void rfbDecrClientRef(rfbClientPtr cl)
 {
-#ifdef __ANDROID__
+#ifdef PLATFORM_SDK_VERSION
   int i = android_atomic_dec(&cl->refCount);
   if (i <= 1 && cl->screen->backgroundLoop != FALSE)
     TSIGNAL(cl->deleteCond);

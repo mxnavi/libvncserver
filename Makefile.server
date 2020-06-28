@@ -69,6 +69,7 @@ LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/lib \
     $(LOCAL_PATH)/libvncserver \
     $(LOCAL_PATH)/common \
+    $(ROOT_DIR)/foundation/include \
 
 LOCAL_CFLAGS += -Wno-format
 LOCAL_CFLAGS += -Wno-unused-result

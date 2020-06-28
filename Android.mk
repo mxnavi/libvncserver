@@ -69,6 +69,7 @@ LOCAL_CFLAGS := \
     -Wno-user-defined-warnings \
 
 LOCAL_CFLAGS += -O3 -fstrict-aliasing -fprefetch-loop-arrays -fvisibility=hidden
+LOCAL_CFLAGS += -DPLATFORM_SDK_VERSION=$(PLATFORM_SDK_VERSION)
 
 #LOCAL_SDK_VERSION := 14
 
