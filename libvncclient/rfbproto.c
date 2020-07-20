@@ -1858,6 +1858,10 @@ HandleRFBServerMessage(rfbClient* client)
 	  return FALSE;
 	SendFramebufferUpdateRequest(client, 0, 0, rect.r.w, rect.r.h, FALSE);
 	rfbClientLog("Got new framebuffer size: %dx%d\n", rect.r.w, rect.r.h);
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
+        extern void __vnc_fb_new_fb_size(rfbClient * client);
+        __vnc_fb_new_fb_size(client);
+#endif
 	continue;
       }
 
