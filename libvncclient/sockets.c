@@ -151,7 +151,7 @@ ReadFromRFBServer(rfbClient* client, char *out, unsigned int n)
   client->buffered = 0;
 
   if (n <= RFB_BUF_SIZE) {
-
+    int max_wait = 0;
     while (client->buffered < n) {
       int i;
       if (client->tlsSession) {
@@ -168,7 +168,11 @@ ReadFromRFBServer(rfbClient* client, char *out, unsigned int n)
 	    /* TODO:
 	       ProcessXtEvents();
 	    */
-	    WaitForMessage(client, 100000);
+	    if (WaitForMessage(client, 100000) < 0) return FALSE;
+            if (max_wait++ > 300) {
+              rfbClientErr("WaitForMessage too long\n");
+              return FALSE;
+            }
 	    i = 0;
 	  } else {
 	    rfbClientErr("read (%d: %s)\n",errno,strerror(errno));
@@ -180,7 +184,7 @@ ReadFromRFBServer(rfbClient* client, char *out, unsigned int n)
 	  }
 	  return FALSE;
 	}
-      }
+      } else { max_wait = 0; }
       client->buffered += i;
     }
 
@@ -189,7 +193,7 @@ ReadFromRFBServer(rfbClient* client, char *out, unsigned int n)
     client->buffered -= n;
 
   } else {
-
+    int max_wait = 0;
     while (n > 0) {
       int i;
       if (client->tlsSession) {
@@ -207,7 +211,11 @@ ReadFromRFBServer(rfbClient* client, char *out, unsigned int n)
 	    /* TODO:
 	       ProcessXtEvents();
 	    */
-	    WaitForMessage(client, 100000);
+	    if (WaitForMessage(client, 100000) < 0) return FALSE;
+            if (max_wait++ > 300) {
+              rfbClientErr("WaitForMessage too long\n");
+              return FALSE;
+            }
 	    i = 0;
 	  } else {
 	    rfbClientErr("read (%s)\n",strerror(errno));
@@ -219,7 +227,7 @@ ReadFromRFBServer(rfbClient* client, char *out, unsigned int n)
 	  }
 	  return FALSE;
 	}
-      }
+      } else {  max_wait = 0; }
       out += i;
       n -= i;
     }
@@ -822,7 +830,7 @@ int WaitForMessage(rfbClient* client,unsigned int usecs)
 #ifdef WIN32
     errno=WSAGetLastError();
 #endif
-    rfbClientLog("Waiting for message failed: %d (%s)\n",errno,strerror(errno));
+    rfbClientErr("Waiting for message failed: %d (%s)\n",errno,strerror(errno));
   }
 
   return num;
