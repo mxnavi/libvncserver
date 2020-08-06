@@ -3920,8 +3920,8 @@ rfbBool rfbSendRectEncodingH264(rfbClientPtr cl, int x, int y, int w,
 	uint32_t type = 0;
 	switch (cl->screen->frameBuffer[4] & 0x1f) {
 	case 5://I Frame
-	case 6://SPS
-	case 7://PPS
+	case 7://SPS
+	case 8://PPS
 		type = 2;
 		break;
 	default:
