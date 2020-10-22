@@ -1547,6 +1547,10 @@ SendFramebufferUpdateRequest(rfbClient* client, int x, int y, int w, int h, rfbB
   if (!WriteToRFBServer(client, (char *)&fur, sz_rfbFramebufferUpdateRequestMsg))
     return FALSE;
 
+#ifdef LIBVNCSERVER_HAVE_ML_EXT
+  extern void __vnc_fb_update_req_sent(rfbClient * cl);
+  __vnc_fb_update_req_sent(client);
+#endif
   return TRUE;
 }
 
