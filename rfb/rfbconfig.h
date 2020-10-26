@@ -190,7 +190,7 @@
 
 /* Define to 1 if you have the `z' library (-lz). */
 #ifndef LIBVNCSERVER_HAVE_LIBZ
-// #define LIBVNCSERVER_HAVE_LIBZ  1
+ #define LIBVNCSERVER_HAVE_LIBZ  1
 #endif
 
 /* linux fb device build environment present */
