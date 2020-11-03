@@ -32,10 +32,6 @@ LOCAL_SRC_FILES := libvncserver/auth.c \
                    libvncserver/stats.c \
                    libvncserver/translate.c \
                    libvncserver/ultra.c \
-                   libvncserver/zlib.c \
-                   libvncserver/zrle.c \
-                   libvncserver/zrleoutstream.c \
-                   libvncserver/zrlepalettehelper.c \
                    libvncserver/rfbssl_none.c \
                    common/d3des.c \
                    common/minilzo.c \
@@ -43,6 +39,11 @@ LOCAL_SRC_FILES := libvncserver/auth.c \
                    common/vncauth.c \
                    test/bmp.c
 
+# not 'LIBVNCSERVER_HAVE_LIBZ'
+                   #libvncserver/zlib.c \
+                   libvncserver/zrle.c \
+                   libvncserver/zrleoutstream.c \
+                   libvncserver/zrlepalettehelper.c \
 
                    #libvncserver/tight.c \
                    libvncserver/rfbcrypto_openssl.c \
@@ -60,6 +61,8 @@ LOCAL_CFLAGS := \
     -ULIBVNCSERVER_WITH_WEBSOCKETS \
     -DHAVE_LIBSSL -DWITH_WEBSOCKETS \
     -Wall
+
+LOCAL_CFLAGS += -DLIBVNCSERVER_HAVE_ML_EXT=1
 
 # -Werror \
     -Wno-missing-field-initializers \
