@@ -1128,13 +1128,22 @@ void rfbInitServer(rfbScreenInfoPtr screen)
 void rfbShutdownServer(rfbScreenInfoPtr screen,rfbBool disconnectClients) {
   rfbLog("rfbShutdownServer() screen: %p disconnectClients: %d", screen, disconnectClients);
   if(disconnectClients) {
-    rfbClientPtr cl;
+    rfbClientPtr cl = NULL;
     rfbClientIteratorPtr iter = rfbGetClientIterator(screen);
-    while( (cl = rfbClientIteratorNext(iter)) ) {
+    while (1) {
+      if (!cl)
+        cl = rfbClientIteratorNext(iter);
+      if (!cl)
+        break;
       if (cl->sock > -1) {
        /* we don't care about maxfd here, because the server goes away */
        rfbCloseClient(cl);
+       /* chenbd asan: heap-use-after-free :0 rfbClientIteratorNext */
+       rfbClientPtr tmp = rfbClientIteratorNext(iter);
        rfbClientConnectionGone(cl);
+       cl = tmp;
+      } else {
+        cl = NULL;
       }
     }
     rfbReleaseClientIterator(iter);
