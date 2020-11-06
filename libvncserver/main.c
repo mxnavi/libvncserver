@@ -1074,7 +1074,9 @@ void rfbNewFramebufferOnlySize(rfbScreenInfoPtr rfbScreen, char *framebuffer,
 
 void rfbScreenCleanup(rfbScreenInfoPtr screen)
 {
-  rfbClientIteratorPtr i=rfbGetClientIterator(screen);
+  extern rfbClientIteratorPtr rfbGetClientIteratorWithClosed(
+      rfbScreenInfoPtr rfbScreen);
+  rfbClientIteratorPtr i = rfbGetClientIteratorWithClosed(screen);
   rfbClientPtr cl,cl1=rfbClientIteratorNext(i);
   while(cl1) {
     cl=rfbClientIteratorNext(i);
