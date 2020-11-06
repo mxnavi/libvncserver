@@ -626,6 +626,15 @@ rfbClientConnectionGone(rfbClientPtr cl)
     sraRgnDestroy(cl->copyRegion);
 
     if (cl->translateLookupTable) free(cl->translateLookupTable);
+    if (cl->extensions) {
+      rfbExtensionData *extension = cl->extensions;
+      cl->extensions = NULL;
+      while (extension) {
+        rfbExtensionData *next = extension->next;
+        free(extension);
+        extension = next;
+      }
+    }
 
     TINI_COND(cl->updateCond);
     TINI_MUTEX(cl->updateMutex);
